@@ -74,10 +74,10 @@ def main():
 
     # Consecutive runs: results file exists, check filesystem for existing downloads
     else:
-        print(f'Found results from previous search at {searchResultsPath}.\n'
-              f'Will check filesystem for existing products.')
         with open(searchResultsPath, 'r') as file:
             dlProductIds = json.load(file)
+        print(f'Found {len(dlProductIds)} results from previous search at {searchResultsPath}.\n'
+              f'Will check filesystem for existing products.')
         assert isinstance(dlProductIds, list) and all(isinstance(element, dict) for element in dlProductIds),\
             f'Results file at {searchResultsPath} seems to be corrupt.\n' \
             f'Did you select the correct file from your last search?'
