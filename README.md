@@ -9,7 +9,7 @@ landsatlinks offers a simple command line interface to retrieve download links f
 
 Features include:
   - an extensive set of filtering methods
-  - 'resuming' when links have expired - inlcuding a filesystem check for finished downloads
+  - 'resuming' when links have expired - including a filesystem check for finished downloads
 
 
 ### Requirements
@@ -24,37 +24,40 @@ python -m pip install git+https://github.com/ernstste/landsatlinks.git
 
 ### Usage
 There are three mandatory arguments required to run the tool and several optional arguments that allow a more detailed search for scenes. Scroll down for a quick explanation of every argument. A call may look like this:
+
 ![CLI first run](https://raw.githubusercontent.com/ernstste/landsatlinks/master/demo/first_run.gif)
 
+
 __required arguments:__
-- -r | --results  
+- -r | --results\
   Provide a path to a file containing the download links created by landsatlinks. This will be created during the first run, or opened in consecutive runs when new links need to be created because the old ones expired. The file containing download links will be created in the same directory, using the name _urls\_landsat\_[sensor]\_c2\_l1\_[timestamp].txt_
-- -s | --satellite  
-  The satellite that scenes are requested for.  
+- -s | --satellite\
+  The satellite that scenes are requested for.\
   choices='TM', 'ETM', 'OLI' (Landsat 5, Landsat 7, Landsat 8)
-- -p | --pathrowlist  
-  Text file containing allowed pathrows combinations
-  The list of allowed paths/rows must contain __one path/row per line__.  
+- -p | --pathrowlist\
+  Text file containing allowed pathrows combinations\
+  The list of allowed paths/rows must contain __one path/row per line__.\
   Format: PPPRRR (Keep padding zeroes!). Good: 194023, bad: 19432
 
 __optional arguments:__
-- -d | --daterange  
-  Start date and end date = date range to be considered.  
-  Format: YYYY-MM-DD,YYYY-MM-DD  
+- -d | --daterange\
+  Start date and end date = date range to be considered.\
+  Format: YYYY-MM-DD,YYYY-MM-DD\
   Default: full archive until today.
-- -c | --cloudcover  
-  Percent (land) cloud cover range to be considered.  
+- -c | --cloudcover\
+  Percent (land) cloud cover range to be considered.\
   Default: 0,100
-- -m | --months  
-  Seasonal filter: define the months to be considered.  
+- -m | --months\
+  Seasonal filter: define the months to be considered.\
   Default: 1,2,3,4,5,6,7,8,9,10
-- -t | --tier  
-  Landsat collection tier level.  
-  Valid tiers: T1,T2,RT  
+- -t | --tier\
+  Landsat collection tier level.\
+  Valid tiers: T1,T2,RT\
   Default: T1
 
-__A note on 'resuming':__
+__A note on 'resuming':__\
 Links are only valid for a certain time and then expire. If there is a large number of downloads, it's likely that not all files could be downloaded before the links expired. landsatlinks will check the filesystem (the directory where the 'results' file is stored and it's subdirectories) for downloaded products and only generate download links for scenes that weren't found in the file system. This should also work if the .tar archives have already been extracted. __Note__ that this does not include a check to see if archives are broken or only partially downloaded.
+
 ![CLI second run](https://raw.githubusercontent.com/ernstste/landsatlinks/master/demo/consecutive_run.gif)
 
 
