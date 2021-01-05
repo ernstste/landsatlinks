@@ -30,27 +30,27 @@ __required arguments:__
 - -r | --results  
   Provide a path to a file containing the download links created by landsatlinks. This will be created during the first run, or opened in consecutive runs when new links need to be created because the old ones expired. The file containing download links will be created in the same directory, using the name _urls\_landsat\_[sensor]\_c2\_l1\_[timestamp].txt_
 - -s | --satellite  
-  The satellite that scenes are requested for.
+  The satellite that scenes are requested for.  
   choices='TM', 'ETM', 'OLI' (Landsat 5, Landsat 7, Landsat 8)
 - -p | --pathrowlist  
   Text file containing allowed pathrows combinations
-  The list of allowed paths/rows must contain __one path/row per line__.
+  The list of allowed paths/rows must contain __one path/row per line__.  
   Format: PPPRRR (Keep padding zeroes!). Good: 194023, bad: 19432
 
 __optional arguments:__
 - -d | --daterange  
-  Start date and end date = date range to be considered. 
-  Format: YYYY-MM-DD,YYYY-MM-DD.
+  Start date and end date = date range to be considered.  
+  Format: YYYY-MM-DD,YYYY-MM-DD.  
   Default: full archive until today.
 - -c | --cloudcover  
-  Percent (land) cloud cover range to be considered.
+  Percent (land) cloud cover range to be considered.  
   Default: 0,100
 - -m | --months  
-  Seasonal filter: define the months to be considered.
+  Seasonal filter: define the months to be considered.  
   Default: 1,2,3,4,5,6,7,8,9,10
 - -t | --tier  
-  Landsat collection tier level. 
-  Valid tiers: T1,T2,RT
+  Landsat collection tier level.  
+  Valid tiers: T1,T2,RT  
   Default: T1
 
 __A note on 'resuming':__
