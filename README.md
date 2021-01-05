@@ -40,7 +40,7 @@ __required arguments:__
 __optional arguments:__
 - -d | --daterange  
   Start date and end date = date range to be considered.  
-  Format: YYYY-MM-DD,YYYY-MM-DD.  
+  Format: YYYY-MM-DD,YYYY-MM-DD  
   Default: full archive until today.
 - -c | --cloudcover  
   Percent (land) cloud cover range to be considered.  
