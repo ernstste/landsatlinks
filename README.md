@@ -24,9 +24,7 @@ python -m pip install git+https://github.com/ernstste/landsatlinks.git
 
 ### Usage
 There are three mandatory arguments required to run the tool and several optional arguments that allow a more detailed search for scenes. Scroll down for a quick explanation of every argument. A call may look like this:
-```sh
-landsatlinks -s landsat_ot_c2_l1 -p path/to/allowed_path_row_list.txt -r path/to/store/results.txt -d 2020-01-01,2020-12-31 -c 0,70 -m 1,2,3,10,11,12 -t T1
-```
+![CLI first run](https://raw.githubusercontent.com/ernstste/landsatlinks/master/demo/first_run.gif)
 
 __required arguments:__
 - -r | --results
@@ -57,10 +55,11 @@ __optional arguments:__
 
 __A note on 'resuming':__
 Links are only valid for a certain time and then expire. If there is a large number of downloads, it's likely that not all files could be downloaded before the links expired. landsatlinks will check the filesystem (the directory where the 'results' file is stored and it's subdirectories) for downloaded products and only generate download links for scenes that weren't found in the file system. This should also work if the .tar archives have already been extracted. __Note__ that this does not include a check to see if archives are broken or only partially downloaded.
+![CLI second run](https://raw.githubusercontent.com/ernstste/landsatlinks/master/demo/consecutive_run.gif)
 
 
 ### Limitations
-Unfortunately, the API access is not always 100% reliable. Timeouts have been observed on and off when the size of the response grows. The requests are split into chunks of 1000 elements to mitigate issues. On a normal day this should work fine. It should be mentioned though that we've also seen days where this had to be reduced drastically or where it was simply not possible to get responses. Good luck :)
+Unfortunately, the API access is not always 100% reliable. Timeouts have been observed on and off, particularly when the size of the response grows. The requests are split into chunks of 1000 elements to mitigate issues. On a normal day this should work fine. It should be mentioned though that we've also seen days where this had to be reduced drastically or where it was simply not possible to get responses. Good luck :)
 
 Only L1TP scenes (precision and terrain corrected) are considered. I didn't see the need to include L1GT or L1GS, but it's easy to change if there's a need.
 
