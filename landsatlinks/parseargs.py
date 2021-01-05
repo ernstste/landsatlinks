@@ -10,17 +10,18 @@ def parse_cli_arguments():
 
     parser.add_argument('-r', '--results',
                         required=True,
-                        help='Path to the file containing the search result.\nThis will be created during the first search.'
-                             '\nThis file should be in the download directory to allow creating new download links\n'
-                             'when the old ones expired.\nThe text file containing the download links be stored in the '
-                             'same directory.')
+                        help='Path to the file containing the search result.This will be created during the first '
+                             'search. This file should be in the download directory to allow creating new download '
+                             'links when the old ones expired. The text file containing the download links will be '
+                             'stored in the same directory.')
     parser.add_argument('-s', '--satellite',
                         required=True,
                         choices=['TM', 'ETM', 'OLI'],
                         help='The satellite that scenes are requested for.')
     parser.add_argument('-p', '--pathrowlist',
                         required=True,
-                        help='Text file containing allowed pathrows, one per line. Format: PPPRRR (Keep padding zeroes!).')
+                        help='Text file containing allowed pathrows, one per line. Format: PPPRRR '
+                             '(Keep padding zeroes!).')
     parser.add_argument('-d', '--daterange', default=f'1970-01-01,{currentDate}',
                         help='Start date and end date = date range to be considered. Format: YYYY-MM-DD,YYYY-MM-DD.'
                              'Default: full archive until today.')
