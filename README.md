@@ -13,8 +13,8 @@ Features include:
 
 
 ### Requirements
-User credentials to login to the USGS EarthExplorer interface are required. The user account needs to have access to the machine-to-machine API, which can be requested through the user profile [here](https://ers.cr.usgs.gov/profile/access).
-Python <= 3.6 is required.
+User credentials to login to the USGS EarthExplorer interface are required. The user account needs to have access to the machine-to-machine API, which can be requested through the user profile [here](https://ers.cr.usgs.gov/profile/access).\
+Python >= 3.6 is required.
 
 ### Installation
 Simply install using pip:
