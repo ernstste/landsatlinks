@@ -2,7 +2,8 @@
 
 
 ##### Creating download urls for Landsat Collection 2 Level 1 product bundles using the USGS/EROS Machine-to-Machine API
-![License](https://img.shields.io/badge/license-MIT-brightgreen?style=plastic) ![Python Version](https://img.shields.io/badge/python-%3E=v3.6-blue?style=plastic&logo=python)
+![Python Version](https://img.shields.io/badge/python-%3E=v3.6-blue)
+![License](https://img.shields.io/badge/license-MIT-brightgreen) 
 
 landsatlinks offers a simple command line interface to retrieve download links for Landsat Collection 2 Level 1 product bundles through the USGS/EROS machine-to-machine API.
 
