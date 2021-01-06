@@ -40,7 +40,7 @@ def main():
     if args.cloudcover:
         minCC, maxCC = args.cloudcover.split(',')
     # seasonal filter
-    seasonalFilter = list(args.months.split(','))
+    seasonalFilter = [int(month) for month in args.months.split(',')]
     # tier
     tier = args.tier
 
@@ -103,4 +103,5 @@ def main():
     print(f'Writing download links to {urlsPath}')
     with open(urlsPath, 'w') as file:
         file.write("\n".join(urls))
+    api.logout()
     print('Done.')

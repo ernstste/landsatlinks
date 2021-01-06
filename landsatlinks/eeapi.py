@@ -86,7 +86,7 @@ class eeapi(object):
             'sceneFilter': sceneFilter
         }
         if seasonal_filter:
-            searchParams.update(seasonalFilter=seasonal_filter)
+            sceneFilter.update(seasonalFilter=seasonal_filter)
         if entity_id:
             searchParams.update(entityId=entity_id)
 
