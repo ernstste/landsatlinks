@@ -16,6 +16,7 @@ Features include:
 User credentials to login to the USGS EarthExplorer interface are required. The user account needs to have access to the machine-to-machine API, which can be requested through the user profile [here](https://ers.cr.usgs.gov/profile/access).\
 Python >= 3.6 is required.
 
+
 ### Installation
 Simply install using pip:
 ```
@@ -49,7 +50,7 @@ __optional arguments:__
   Default: 0,100
 - -m | --months\
   Seasonal filter: define the months to be considered.\
-  Default: 1,2,3,4,5,6,7,8,9,10
+  Default: 1,2,3,4,5,6,7,8,9,10,11,12
 - -t | --tier\
   Landsat collection tier level.\
   Valid tiers: T1,T2,RT\
