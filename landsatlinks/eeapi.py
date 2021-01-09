@@ -15,7 +15,9 @@ class eeapi(object):
         response = requests.post(f'{self.endpoint}login?', data=loginData).json()
         if response.get('errorCode', None):
             print(f'Error: {response["errorCode"]}: {response["errorMessage"]}\n'
-                  f'Please check your login data (are they working on the EarthExplorer website?)')
+                  'Please check your login data.\n'
+                  'Login will fail if you did not request access to the M2M API yet.\n'
+                  'Request access through your user profile at https://ers.cr.usgs.gov/')
             exit(1)
         return response['data']
 
@@ -58,7 +60,7 @@ class eeapi(object):
         """
         if not dataset_name:
             print("No dataset defined. Use 'landsat_ot_c2_l1', 'landsat_etm_c2_l1', or 'landsat_tm_c2_l1'")
-            exit()
+            exit(1)
         if dataset_name == 'landsat_ot_c2_l1':
             kwargs.update(sensor='OLI_TIRS', nadir='NADIR')
 
@@ -94,6 +96,9 @@ class eeapi(object):
         if response.get('errorCode', None):
             print(f'Error: {response["errorCode"]}: {response["errorMessage"]}')
             sys.exit(1)
+        elif response['recordsReturned'] == 0:
+            print('No scenes matching search results found. Exiting.')
+            exit(0)
         else:
             return response['results']
 
@@ -135,9 +140,7 @@ class eeapi(object):
         # Generate links
         urls = []
         for i, downloads in enumerate(dlSplit):
-            # set a label for the download request
-            label = "ls_download"
-            dl_request_params = {'downloads': downloads, 'label': label}
+            dl_request_params = {'downloads': downloads}
             # Call the download to get the direct download urls
             response = self.request('download-request', **dl_request_params)
             if response.get('errorCode', None):
