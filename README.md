@@ -31,7 +31,7 @@ There are three mandatory arguments required to run the tool and several optiona
 
 __required arguments:__
 - results\
-  Provide a path to a file containing the download links created by landsatlinks. This will be created during the first run, or opened in consecutive runs when new links need to be created because the old ones expired. The file containing download links will be created in the same directory, using the name _urls\_landsat\_[sensor]\_c2\_l1\_[timestamp].txt_
+  Provide a path to a file containing the search results created by landsatlinks. This will be created during the first run, or opened in consecutive runs when new links need to be created because the old ones expired. The file containing download links will be created in the same directory, using the name _urls\_landsat\_[sensor]\_c2\_l1\_[timestamp].txt_
 - sensor\
   The sensor that scenes are requested for.\
   choices = 'TM', 'ETM', 'OLI' (Landsat 4/5, Landsat 7, Landsat 8)
