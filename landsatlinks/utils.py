@@ -100,7 +100,7 @@ def filter_pathrow(scene_ids, pr_list):
 def find_downloaded_scenes(search_path, recursive=True):
     # match Landsat 5/7/8 Collection 1/2 Level 1 folders and archives (.tar/.tar.gz)
     regex_pattern = re.compile(
-        '^L[C-T]0[578]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.tar){0,1}(.gz){0,1}$')
+        '^L[C-T]0[4578]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.tar){0,1}(.gz){0,1}$')
     path = Path(search_path)
     if recursive:
         glob_pattern = '**/*'
