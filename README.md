@@ -32,7 +32,7 @@ There are three mandatory arguments required to run the tool and several optiona
 __required arguments:__
 - -r | --results\
   Provide a path to a file containing the download links created by landsatlinks. This will be created during the first run, or opened in consecutive runs when new links need to be created because the old ones expired. The file containing download links will be created in the same directory, using the name _urls\_landsat\_[sensor]\_c2\_l1\_[timestamp].txt_
-- -s | --satellite\
+- -s | --sensor\
   The satellite that scenes are requested for.\
   choices='TM', 'ETM', 'OLI' (Landsat 5, Landsat 7, Landsat 8)
 - -p | --pathrowlist\

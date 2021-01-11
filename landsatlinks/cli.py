@@ -21,7 +21,7 @@ def main():
         searchResultsPath = os.path.realpath(args.results)
     # dataset name
     sat_dict = {'TM': 'landsat_tm_c2_l1', 'ETM': 'landsat_etm_c2_l1', 'OLI': 'landsat_ot_c2_l1'}
-    datasetName = sat_dict[args.satellite]
+    datasetName = sat_dict[args.sensor]
     # path to pathrow list
     prListPath = args.pathrowlist
     if not os.path.exists(prListPath):
@@ -55,7 +55,7 @@ def main():
     try:
         prList = utils.load_tile_list(prListPath)
     except:
-        print("Could not load path row list.")
+        print(f'Could not load path row list from {prListPath}')
 
     # First run: no results file in filesystem yet
     if not os.path.exists(searchResultsPath):
