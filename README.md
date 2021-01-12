@@ -55,6 +55,10 @@ __optional arguments:__
   Landsat collection tier level.\
   Valid tiers: T1,T2,RT\
   Default: T1
+- -l | --level\
+  Landsat level of processing.\
+  Valid levels: L1TP,L1GT,L1GS\
+  Default: L1TP
 
 __A note on 'resuming':__\
 Links are only valid for a certain time and then expire. If there is a large number of downloads, it's likely that not all files could be downloaded before the links expired. landsatlinks will check the filesystem (the directory where the 'results' file is stored and it's subdirectories) for downloaded products and only generate download links for scenes that weren't found in the file system. This should also work if the .tar archives have already been extracted. __Note__ that this does not include a check to see if archives are broken or only partially downloaded.
@@ -64,8 +68,6 @@ Links are only valid for a certain time and then expire. If there is a large num
 
 ### Limitations
 Unfortunately, the API access is not always 100% reliable. Timeouts have been observed on and off, particularly when the size of the response grows. The requests are split into chunks of 1000 elements to mitigate issues. On a normal day this should work fine. It should be mentioned though that we've also seen days where this had to be reduced drastically or where it was simply not possible to get responses. Good luck :)
-
-Only L1TP scenes (precision and terrain corrected) are considered. I didn't see the need to include L1GT or L1GS, but it's easy to change if there's a need.
 
 
 ### Hints

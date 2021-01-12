@@ -11,18 +11,18 @@ def create_meta_dict(filter_id, filter_type, **kwargs):
 
 def create_child_filters(dataset_name, **kwargs):
     # use .get method to get value for key in position 1, use default value in 2 if key doesn't exist in dict
-    data_type = kwargs.get('data_type', 'L1TP')
+    data_type_l1 = kwargs.get('data_type_l1', 'L1TP')
     tier = kwargs.get('tier', 'T1')
     day_night = kwargs.get('day_night', 'DAY')
 
     filters = []
 
-    if data_type:
+    if data_type_l1:
         filters.append(
             create_meta_dict(
                 filter_id='5e81f14fcf660794',
                 filter_type='value',
-                value=data_type
+                value=data_type_l1
             )
         )
     if tier:

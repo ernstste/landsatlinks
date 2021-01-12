@@ -48,8 +48,15 @@ def parse_cli_arguments():
     )
     parser.add_argument(
         '-t', '--tier',
+        choices=['T1', 'T2'],
         default='T1',
         help='Landsat collection tier level. Valid tiers: T1,T2,RT \nDefault: T1'
+    )
+    parser.add_argument(
+        '-l', '--level',
+        choices=['L1TP', 'L1GT', 'L1GS'],
+        default='L1TP',
+        help='Landsat level of processing. Valid levels: L1TP, L1GT, L1GS'
     )
     parser.add_argument(
         '-v', '--version',

@@ -41,8 +41,15 @@ def main():
         minCC, maxCC = args.cloudcover.split(',')
     # seasonal filter
     seasonalFilter = [int(month) for month in args.months.split(',')]
+    # processing level
+    data_type_l1 = args.level
     # tier
     tier = args.tier
+    # make sure chosen combinations of tier and data_type_l1 make sense
+    if data_type_l1 != 'L1TP' and tier == 'T1':
+        print('Error: Tier 1 selected with processing level L1GT or L1GS.\n'
+              'Choose Tier 2 (T2) or Real-Time (RT) for processing levels lower than L1TP.')
+        exit(1)
 
 
     # ==================================================================================================================
@@ -63,7 +70,7 @@ def main():
                                          pr_list=prList,
                                          start=start, end=end, seasonal_filter=seasonalFilter,
                                          min_cc=minCC, max_cc=maxCC,
-                                         tier=tier)
+                                         data_type_l1=data_type_l1, tier=tier)
         filteredSceneResponse = utils.filter_results_by_pr(sceneResponse, prList)
         print(f'Found {len(filteredSceneResponse)} scenes. Retrieving product ids...')
         legacyIds = [s.get('entityId') for s in filteredSceneResponse]
