@@ -14,6 +14,10 @@ def main():
     args = parse_cli_arguments()
 
     # path to links
+    if not os.path.splitext(args.results)[1]:
+        print("Error: The specified results file does not seem to have a file ending.\n"
+              "Make sure to provide a path to a file, not a directory. Exiting.")
+        exit(1)
     if not os.access(os.path.dirname(args.results), os.W_OK):
         print("Error: Directory where results are supposed to be stored does not exists or is not writeable. Exiting.")
         exit(1)
@@ -47,10 +51,14 @@ def main():
     tier = args.tier
     # make sure chosen combinations of tier and data_type_l1 make sense
     if data_type_l1 != 'L1TP' and tier == 'T1':
-        print('Error: Tier 1 selected with processing level L1GT or L1GS.\n'
+        print('Error: Tier 1 selected with processing level L1GT or L1GS (tier defaults to T1 if not specified).\n'
               'Choose Tier 2 (T2) or Real-Time (RT) for processing levels lower than L1TP.')
         exit(1)
-
+    # load pathrow list
+    try:
+        prList = utils.load_tile_list(prListPath)
+    except:
+        print(f'Could not load path row list from {prListPath}')
 
     # ==================================================================================================================
     # 2. Run
@@ -58,11 +66,6 @@ def main():
     user = input("Enter your USGS EarthExplorer username: ")
     passwd = getpass("Enter your USGS EarthExplorer password: ")
     api = eeapi(user, passwd)
-
-    try:
-        prList = utils.load_tile_list(prListPath)
-    except:
-        print(f'Could not load path row list from {prListPath}')
 
     # First run: no results file in filesystem yet
     if not os.path.exists(searchResultsPath):
