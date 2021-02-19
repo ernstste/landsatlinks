@@ -84,8 +84,13 @@ def main():
 
     # Consecutive runs: results file exists, check filesystem for existing downloads
     else:
-        with open(searchResultsPath, 'r') as file:
-            dlProductIds = json.load(file)
+        try:
+            with open(searchResultsPath, 'r') as file:
+                dlProductIds = json.load(file)
+        except:
+            print('Results file seems to be corrupt. Please fix or remove. Exiting')
+            exit(1)
+
         print(f'Found {len(dlProductIds)} results from previous search at {searchResultsPath}.\n'
               f'Will check filesystem for existing products.')
         assert isinstance(dlProductIds, list) and all(isinstance(element, dict) for element in dlProductIds),\
