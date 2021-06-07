@@ -60,7 +60,7 @@ __optional arguments:__
   Valid levels: L1TP,L1GT,L1GS\
   Default: L1TP
 - -s | --secret\
-  Secret file containing the USGS EarthExplorer login\
+  Path to secret file containing the USGS EarthExplorer login\
   First line: user, second line: password
 
 __A note on 'resuming':__\
