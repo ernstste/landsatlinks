@@ -3,6 +3,8 @@
 
 from python
 
-RUN python -m pip install git+https://github.com/ernstste/landsatlinks.git
+COPY . src
+
+RUN python -m pip install --use-feature=in-tree-build src/
 
 CMD ["landsatlinks"]
