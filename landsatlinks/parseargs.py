@@ -63,5 +63,9 @@ def parse_cli_arguments():
         action='version',
         version=f'landsatlinks version {__version__} https://github.com/ernstste/landsatlinks'
     )
+    parser.add_argument(
+        '-s', '--secret',
+        help='Path to a file containing the username and password for the USGS EarthExplorer.'
+    )
 
     return parser.parse_args()
