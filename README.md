@@ -22,6 +22,10 @@ Simply install using pip:
 ```
 python -m pip install git+https://github.com/ernstste/landsatlinks.git
 ```
+or download the Docker image here:
+```
+https://hub.docker.com/repository/docker/ernstste/landsatlinks
+```
 
 ### Usage
 There are three mandatory arguments required to run the tool and several optional arguments that allow a more detailed search for scenes. Scroll down for a quick explanation of every argument. A call may look like this:
