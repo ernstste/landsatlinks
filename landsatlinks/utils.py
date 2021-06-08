@@ -139,6 +139,7 @@ def load_tile_list(file_path):
         exit(1)
     return tile_list
 
+
 def load_secret(file_path):
     with open(file_path) as file:
         secret = [line.rstrip() for line in file]
@@ -147,6 +148,7 @@ def load_secret(file_path):
               "and the second line being the password. Exiting.")
         exit(1)
     return secret
+
 
 def filter_results_by_pr(scene_response, pr_list):
     filtered_scene_response = []

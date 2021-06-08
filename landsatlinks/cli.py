@@ -13,7 +13,7 @@ def main():
     # 1. Check input and set up variables
     args = parse_cli_arguments()
 
-    # path to links
+    # path to search results
     searchResultsPath = os.path.realpath(args.results)
     if not os.path.splitext(searchResultsPath)[1]:
         print("Error: The specified results file does not seem to have a file ending.\n"
@@ -21,6 +21,13 @@ def main():
         exit(1)
     if not os.access(os.path.dirname(searchResultsPath), os.W_OK):
         print("Error: Directory where results are supposed to be stored does not exists or is not writeable. Exiting.")
+        exit(1)
+    if not args.resume and os.path.exists(searchResultsPath):
+        print("Error: Search results file already exists. Use the --resume option if you want to use results from a "
+              "previous search. Exiting.")
+        exit(1)
+    if args.resume and not os.path.exists(searchResultsPath):
+        print(f"Error: Search results file does not exists at {searchResultsPath}. Exiting.")
         exit(1)
 
     # dataset name
@@ -73,7 +80,7 @@ def main():
     api = eeapi(user, passwd)
 
     # First run: no results file in filesystem yet
-    if not os.path.exists(searchResultsPath):
+    if not args.resume:
         sceneResponse = api.scene_search(dataset_name=datasetName,
                                          pr_list=prList,
                                          start=start, end=end, seasonal_filter=seasonalFilter,
@@ -88,7 +95,7 @@ def main():
             json.dump(dlProductIds, file)
 
     # Consecutive runs: results file exists, check filesystem for existing downloads
-    else:
+    if args.resume:
         try:
             with open(searchResultsPath, 'r') as file:
                 dlProductIds = json.load(file)

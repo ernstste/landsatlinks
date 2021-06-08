@@ -14,10 +14,9 @@ def parse_cli_arguments():
     # positional arguments
     parser.add_argument(
         'results',
-        help='Path to the file containing the search result.This will be created during the first '
-             'search. This file should be in the download directory to allow creating new download '
-             'links when the old ones expired. The text file containing the download links will be '
-             'stored in the same directory.'
+        help='Path to the file containing the search results. This file should be in the download directory to allow '
+             'creating new download links when the old ones expired. The text file containing the download links will '
+             'be stored in the same directory.'
     )
     parser.add_argument(
         'sensor',
@@ -27,7 +26,7 @@ def parse_cli_arguments():
     )
     parser.add_argument(
         'pathrowlist',
-        help='Path to text file containing allowed pathrows, one per line. Format: PPPRRR (keep padding zeroes!).'
+        help='Path to text file containing allowed path/rows, one per line. Format: PPPRRR (keep padding zeroes!).'
     )
 
     # optional arguments
@@ -62,6 +61,12 @@ def parse_cli_arguments():
         '-v', '--version',
         action='version',
         version=f'landsatlinks version {__version__} https://github.com/ernstste/landsatlinks'
+    )
+    parser.add_argument(
+        '-r', '--resume',
+        action='store_true',
+        help='Resume from prior search: Search the folder containing the results file for products that have already'
+             'been downloaded and only create download links for products that were not downloaded yet.'
     )
     parser.add_argument(
         '-s', '--secret',
