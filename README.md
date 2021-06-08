@@ -59,6 +59,9 @@ __optional arguments:__
   Landsat level of processing.\
   Valid levels: L1TP,L1GT,L1GS\
   Default: L1TP
+- -r | --resume\
+  Resume from prior search (when links expired)\
+  Default: False
 - -s | --secret\
   Path to secret file containing the USGS EarthExplorer login\
   First line: user, second line: password
