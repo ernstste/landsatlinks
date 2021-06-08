@@ -19,7 +19,7 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v2
       - name: Docker login
-        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD --password-stdin
       - name: Build image
         run: docker build . --file Dockerfile --tag $IMAGE_NAME
       - name: Push image
