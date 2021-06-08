@@ -59,6 +59,9 @@ __optional arguments:__
   Landsat level of processing.\
   Valid levels: L1TP,L1GT,L1GS\
   Default: L1TP
+- -s | --secret\
+  Path to secret file containing the USGS EarthExplorer login\
+  First line: user, second line: password
 
 __A note on 'resuming':__\
 Links are only valid for a certain time and then expire. If there is a large number of downloads, it's likely that not all files could be downloaded before the links expired. landsatlinks will check the filesystem (the directory where the 'results' file is stored and it's subdirectories) for downloaded products and only generate download links for scenes that weren't found in the file system. This should also work if the .tar archives have already been extracted. __Note__ that this does not include a check to see if archives are broken or only partially downloaded.

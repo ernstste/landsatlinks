@@ -14,30 +14,30 @@ def main():
     args = parse_cli_arguments()
 
     # path to links
-    if not os.path.splitext(args.results)[1]:
+    searchResultsPath = os.path.realpath(args.results)
+    if not os.path.splitext(searchResultsPath)[1]:
         print("Error: The specified results file does not seem to have a file ending.\n"
               "Make sure to provide a path to a file, not a directory. Exiting.")
         exit(1)
-    if not os.access(os.path.dirname(args.results), os.W_OK):
+    if not os.access(os.path.dirname(searchResultsPath), os.W_OK):
         print("Error: Directory where results are supposed to be stored does not exists or is not writeable. Exiting.")
         exit(1)
-    else:
-        searchResultsPath = os.path.realpath(args.results)
+
     # dataset name
     sat_dict = {'TM': 'landsat_tm_c2_l1', 'ETM': 'landsat_etm_c2_l1', 'OLI': 'landsat_ot_c2_l1'}
     datasetName = sat_dict[args.sensor]
     # path to pathrow list
-    prListPath = args.pathrowlist
+    prListPath = os.path.realpath(args.pathrowlist)
     if not os.path.exists(prListPath):
         print("Error: PathRow list file does not exists. Check the filepath. Exiting.")
         exit(1)
 
     # date range
     dates = args.daterange.split(',')
-    dateRe = re.compile('[0-9]{4}-[0-1][0-2]-[0-3][0-9]')
+    dateRe = re.compile('[0-9]{4}-[0-1][0-9]-[0-3][0-9]')
     for date in dates:
         if not dateRe.match(date):
-            print('Error: Dates not provided in the format YYYY-MM-DD,YYY-MM-DD')
+            print('Error: Dates not provided in the format YYYY-MM-DD,YYYY-MM-DD')
             exit(1)
     start, end = dates
     # cloud cover
@@ -60,11 +60,16 @@ def main():
     except:
         print(f'Could not load path row list from {prListPath}')
 
+
     # ==================================================================================================================
     # 2. Run
     # Login
-    user = input("Enter your USGS EarthExplorer username: ")
-    passwd = getpass("Enter your USGS EarthExplorer password: ")
+    if args.secret:
+        secret = utils.load_secret(os.path.realpath(args.secret))
+        user, passwd = secret
+    else:
+        user = input("Enter your USGS EarthExplorer username: ")
+        passwd = getpass("Enter your USGS EarthExplorer password: ")
     api = eeapi(user, passwd)
 
     # First run: no results file in filesystem yet
