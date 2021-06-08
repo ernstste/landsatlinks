@@ -60,7 +60,7 @@ __optional arguments:__
   Valid levels: L1TP,L1GT,L1GS\
   Default: L1TP
 - -r | --resume\
-  Resume from prior search (when links expired)\
+  Resume from prior search (only create links for products that weren't downloaded yet)\
   Default: False
 - -s | --secret\
   Path to secret file containing the USGS EarthExplorer login\
