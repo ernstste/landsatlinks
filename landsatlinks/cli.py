@@ -16,15 +16,15 @@ def main():
     # path to search results
     searchResultsPath = os.path.realpath(args.results)
     if not os.path.splitext(searchResultsPath)[1]:
-        print("Error: The specified results file does not seem to have a file ending.\n"
-              "Make sure to provide a path to a file, not a directory. Exiting.")
+        print('Error: The specified results file does not seem to have a file ending.\n'
+              'Make sure to provide a path to a file, not a directory. Exiting.')
         exit(1)
     if not os.access(os.path.dirname(searchResultsPath), os.W_OK):
-        print("Error: Directory where results are supposed to be stored does not exists or is not writeable. Exiting.")
+        print('Error: Directory where results are supposed to be stored does not exists or is not writeable. Exiting.')
         exit(1)
     if not args.resume and os.path.exists(searchResultsPath):
-        print("Error: Search results file already exists. Use the --resume option if you want to use results from a "
-              "previous search. Exiting.")
+        print('Error: Search results file already exists. Use the --resume option if you want to use results from a '
+              'previous search. Exiting.')
         exit(1)
     if args.resume and not os.path.exists(searchResultsPath):
         print(f"Error: Search results file does not exists at {searchResultsPath}. Exiting.")
@@ -36,7 +36,7 @@ def main():
     # path to pathrow list
     prListPath = os.path.realpath(args.pathrowlist)
     if not os.path.exists(prListPath):
-        print("Error: PathRow list file does not exists. Check the filepath. Exiting.")
+        print('Error: PathRow list file does not exists. Check the filepath. Exiting.')
         exit(1)
 
     # date range
@@ -67,6 +67,13 @@ def main():
     except:
         print(f'Could not load path row list from {prListPath}')
 
+    # path to FORCE Level-2 logs
+    if args.forcelogs:
+        logPath = os.path.realpath(args.forcelogs)
+        if not os.access(os.path.dirname(logPath), os.R_OK):
+            print('Error: Directory where FORCE log files are supposed to be stored does not exists or is not readable.'
+                  ' Exiting.')
+            exit(1)
 
     # ==================================================================================================================
     # 2. Run
@@ -75,11 +82,11 @@ def main():
         secret = utils.load_secret(os.path.realpath(args.secret))
         user, passwd = secret
     else:
-        user = input("Enter your USGS EarthExplorer username: ")
-        passwd = getpass("Enter your USGS EarthExplorer password: ")
+        user = input('Enter your USGS EarthExplorer username: ')
+        passwd = getpass('Enter your USGS EarthExplorer password: ')
     api = eeapi(user, passwd)
 
-    # First run: no results file in filesystem yet
+    # First run: Create results file
     if not args.resume:
         sceneResponse = api.scene_search(dataset_name=datasetName,
                                          pr_list=prList,
@@ -94,7 +101,7 @@ def main():
         with open(searchResultsPath, 'w') as file:
             json.dump(dlProductIds, file)
 
-    # Consecutive runs: results file exists, check filesystem for existing downloads
+    # Consecutive runs: check filesystem for existing downloads
     if args.resume:
         try:
             with open(searchResultsPath, 'r') as file:
@@ -103,25 +110,36 @@ def main():
             print('Results file seems to be corrupt. Please fix or remove. Exiting')
             exit(1)
 
-        print(f'Found {len(dlProductIds)} results from previous search at {searchResultsPath}.\n'
-              f'Will check filesystem for existing products.')
+        print(f'Found {len(dlProductIds)} results from previous search at {searchResultsPath}.')
         assert isinstance(dlProductIds, list) and all(isinstance(element, dict) for element in dlProductIds),\
             f'Results file at {searchResultsPath} seems to be corrupt.\n' \
             f'Did you select the correct file from your last search?'
 
         # check for scenes already existing in the filesystem
-        downloadedScenes = utils.find_downloaded_scenes(search_path=os.path.dirname(searchResultsPath), recursive=True)
-        print(f'Found {len(downloadedScenes)} existing products.')
+        downloadedScenes = utils.find_files(
+            search_path=os.path.dirname(searchResultsPath), search_type='product', recursive=True
+        )
+        print(f'{len(downloadedScenes)} products found in file system.')
         # only keep products if they don't exist on drive
-        tempList = []
-        for i in range(len(dlProductIds)):
-            if dlProductIds[i]['displayId'] not in downloadedScenes:
-                tempList.append(dlProductIds[i])
-        dlProductIds = tempList
+        dlProductIds = utils.remove_duplicate_productids(dlProductIds, downloadedScenes)
+        # tempList = []
+        # for i in range(len(dlProductIds)):
+        #     if dlProductIds[i]['displayId'] not in downloadedScenes:
+        #         tempList.append(dlProductIds[i])
+        # dlProductIds = tempList
         print(f'{len(dlProductIds)} products from previous search not found in filesystem.')
 
+    # Check for FORCE Level-2 log files in the filesystem
+    if args.forcelogs:
+        print('\nChecking file system for FORCE Level-2 processing log files.')
+        productIdsLogs = utils.find_files(
+            search_path=os.path.dirname(logPath), search_type='log', recursive=True)
+        print(f'{len(productIdsLogs)} FORCE log files found.')
+        dlProductIds = utils.remove_duplicate_productids(dlProductIds, productIdsLogs)
+        print(f'{len(dlProductIds)} products from search results not processed by FORCE yet.')
+
     # Generate download links and save to disk
-    print(f'Generating download links for {len(dlProductIds)} product bundles.')
+    print(f'\nGenerating download links for {len(dlProductIds)} product bundles.')
     urls = api.get_download_links(dl_product_ids=dlProductIds)
 
     timeNow = datetime.now().strftime('%Y%m%dT%H%M%S')
