@@ -97,10 +97,18 @@ def filter_pathrow(scene_ids, pr_list):
     return filtered_scenes
 
 
-def find_downloaded_scenes(search_path, recursive=True):
+def find_files(search_path, search_type, recursive=True):
     # match Landsat 5/7/8 Collection 1/2 Level 1 folders and archives (.tar/.tar.gz)
-    regex_pattern = re.compile(
-        '^L[C-T]0[4578]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.tar){0,1}(.gz){0,1}$')
+    if search_type == 'product':
+        regex_pattern = re.compile(
+            '^L[C-T]0[4578]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.tar){0,1}(.gz){0,1}$')
+    elif search_type == 'log':
+        regex_pattern = re.compile(
+            '^L[C-T]0[4578]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.log)$')
+    else:
+        print('Error: invalid search_type specified.')
+        exit()
+
     path = Path(search_path)
     if recursive:
         glob_pattern = '**/*'
@@ -156,3 +164,11 @@ def filter_results_by_pr(scene_response, pr_list):
         if result['displayId'][10:16] in pr_list:
             filtered_scene_response.append(result)
     return filtered_scene_response
+
+
+def remove_duplicate_productids(productids, pids_to_remove):
+    updated_pids = []
+    for i in range(len(productids)):
+        if productids[i]['displayId'] not in pids_to_remove:
+            updated_pids.append(productids[i])
+    return updated_pids

@@ -72,5 +72,10 @@ def parse_cli_arguments():
         '-s', '--secret',
         help='Path to a file containing the username and password for the USGS EarthExplorer.'
     )
+    parser.add_argument(
+        '-f', '--forcelogs',
+        help='Path to FORCE Level-2 log files. Search this folder for log files and only consider products that '
+             'have not been processed before.'
+    )
 
     return parser.parse_args()
