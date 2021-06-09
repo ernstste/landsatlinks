@@ -122,18 +122,13 @@ def main():
         print(f'{len(downloadedScenes)} products found in file system.')
         # only keep products if they don't exist on drive
         dlProductIds = utils.remove_duplicate_productids(dlProductIds, downloadedScenes)
-        # tempList = []
-        # for i in range(len(dlProductIds)):
-        #     if dlProductIds[i]['displayId'] not in downloadedScenes:
-        #         tempList.append(dlProductIds[i])
-        # dlProductIds = tempList
         print(f'{len(dlProductIds)} products from previous search not found in filesystem.')
 
     # Check for FORCE Level-2 log files in the filesystem
     if args.forcelogs:
         print('\nChecking file system for FORCE Level-2 processing log files.')
         productIdsLogs = utils.find_files(
-            search_path=os.path.dirname(logPath), search_type='log', recursive=True)
+            search_path=logPath, search_type='log', recursive=True)
         print(f'{len(productIdsLogs)} FORCE log files found.')
         dlProductIds = utils.remove_duplicate_productids(dlProductIds, productIdsLogs)
         print(f'{len(dlProductIds)} products from search results not processed by FORCE yet.')

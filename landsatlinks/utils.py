@@ -104,7 +104,7 @@ def find_files(search_path, search_type, recursive=True):
             '^L[C-T]0[4578]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.tar){0,1}(.gz){0,1}$')
     elif search_type == 'log':
         regex_pattern = re.compile(
-            '^L[C-T]0[4578]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.log)$')
+            '^L[C-T]0[4578]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.tar){0,1}(.log)$')
     else:
         print('Error: invalid search_type specified.')
         exit()
