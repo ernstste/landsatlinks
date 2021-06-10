@@ -15,13 +15,7 @@ def main():
 
     # path to search results
     searchResultsPath = os.path.realpath(args.results)
-    if not os.path.splitext(searchResultsPath)[1]:
-        print('Error: The specified results file does not seem to have a file ending.\n'
-              'Make sure to provide a path to a file, not a directory. Exiting.')
-        exit(1)
-    if not os.access(os.path.dirname(searchResultsPath), os.W_OK):
-        print('Error: Directory where results are supposed to be stored does not exists or is not writeable. Exiting.')
-        exit(1)
+    utils.check_file_paths(searchResultsPath, 'search results')
     if not args.resume and os.path.exists(searchResultsPath):
         print('Error: Search results file already exists. Use the --resume option if you want to use results from a '
               'previous search. Exiting.')
@@ -29,6 +23,11 @@ def main():
     if args.resume and not os.path.exists(searchResultsPath):
         print(f"Error: Search results file does not exists at {searchResultsPath}. Exiting.")
         exit(1)
+
+    # path to download links file
+    if args.output:
+        downloadLinksPath = os.path.realpath(args.output)
+        utils.check_file_paths(downloadLinksPath)
 
     # dataset name
     sat_dict = {'TM': 'landsat_tm_c2_l1', 'ETM': 'landsat_etm_c2_l1', 'OLI': 'landsat_ot_c2_l1'}
@@ -138,10 +137,11 @@ def main():
     urls = api.get_download_links(dl_product_ids=dlProductIds)
 
     timeNow = datetime.now().strftime('%Y%m%dT%H%M%S')
-    urlsPath = os.path.join(os.path.dirname(searchResultsPath), f'urls_{datasetName}_{timeNow}.txt')
+    if not args.output:
+        downloadLinksPath = os.path.join(os.path.dirname(searchResultsPath), f'urls_{datasetName}_{timeNow}.txt')
 
-    print(f'Writing download links to {urlsPath}')
-    with open(urlsPath, 'w') as file:
+    print(f'Writing download links to {downloadLinksPath}')
+    with open(downloadLinksPath, 'w') as file:
         file.write("\n".join(urls))
     api.logout()
     print('Done.')

@@ -77,5 +77,9 @@ def parse_cli_arguments():
         help='Path to FORCE Level-2 log files. Search this folder for log files and only consider products that '
              'have not been processed before.'
     )
+    parser.add_argument(
+        '-o', '--output',
+        help='Define the output name of the file containing the download links.'
+    )
 
     return parser.parse_args()

@@ -1,5 +1,6 @@
 from pathlib import Path
 import re
+import os
 
 
 def create_meta_dict(filter_id, filter_type, **kwargs):
@@ -172,3 +173,13 @@ def remove_duplicate_productids(productids, pids_to_remove):
         if productids[i]['displayId'] not in pids_to_remove:
             updated_pids.append(productids[i])
     return updated_pids
+
+
+def check_file_paths(path, name):
+    if not os.path.splitext(path)[1]:
+        print(f'Error: The specified {name} file does not seem to have a file ending.\n'
+              'Make sure to provide a path to a file, not a directory. Exiting.')
+        exit(1)
+    if not os.access(os.path.dirname(path), os.W_OK):
+        print(f'Error: Directory where {name} are supposed to be stored does not exists or is not writeable. Exiting.')
+        exit(1)
