@@ -27,7 +27,7 @@ def main():
     # path to download links file
     if args.output:
         downloadLinksPath = os.path.realpath(args.output)
-        utils.check_file_paths(downloadLinksPath)
+        utils.check_file_paths(downloadLinksPath, 'download links')
 
     # dataset name
     sat_dict = {'TM': 'landsat_tm_c2_l1', 'ETM': 'landsat_etm_c2_l1', 'OLI': 'landsat_ot_c2_l1'}
