@@ -21,7 +21,8 @@ def main():
               'previous search. Exiting.')
         exit(1)
     if args.resume and not os.path.exists(searchResultsPath):
-        print(f"Error: Search results file does not exists at {searchResultsPath}. Exiting.")
+        print(f"Error: Search results file does not exist at {searchResultsPath}. Exiting.\n"
+              f"(Did you accidentally set the --resume option?)")
         exit(1)
 
     # path to download links file
@@ -94,6 +95,7 @@ def main():
                                          data_type_l1=data_type_l1, tier=tier)
         filteredSceneResponse = utils.filter_results_by_pr(sceneResponse, prList)
         print(f'Found {len(filteredSceneResponse)} scenes. Retrieving product ids...')
+        print(f'Warning: The M2M API only allows requesting 15000 scenes/15 min. landsatlinks will pause for 15 mins if rate limiting occurs.')
         legacyIds = [s.get('entityId') for s in filteredSceneResponse]
         dlProductIds = api.get_download_options(dataset_name=datasetName, scene_ids=legacyIds)
         print(f'Writing results to {searchResultsPath}')

@@ -2,6 +2,7 @@ import json
 import requests
 import sys
 import landsatlinks.utils as utils
+import time
 
 
 class eeapi(object):
@@ -38,6 +39,16 @@ class eeapi(object):
         headers = {'X-Auth-Token': self.key}
         response = requests.post(url, params, headers=headers).json()
         if response.get('errorCode', None):
+            if response['errorCode'] == 'RATE_LIMIT_USER_DL':
+                print('Rate limit exceeded. Will sleep for 15 minutes.')
+                time.sleep(905)
+                response = requests.post(url, params, headers=headers).json()
+                if response.get('errorCode', None):
+                    print('here')
+                    print(f'Error: {response["errorCode"]}: {response["errorMessage"]}')
+                    print('M2M API threw an error despite waiting.\nPlease open an issue on github if the error persists.')
+                    sys.exit(1)
+            print('there')
             print(f'Error: {response["errorCode"]}: {response["errorMessage"]}')
             sys.exit(1)
         else:
@@ -143,9 +154,6 @@ class eeapi(object):
             dl_request_params = {'downloads': downloads}
             # Call the download to get the direct download urls
             response = self.request('download-request', **dl_request_params)
-            if response.get('errorCode', None):
-                print(f'Error: {response["errorCode"]}: {response["errorMessage"]}')
-                sys.exit(1)
             for download in response['availableDownloads']:
                 urls.append(download['url'])
 
