@@ -95,7 +95,9 @@ def main():
                                          data_type_l1=data_type_l1, tier=tier)
         filteredSceneResponse = utils.filter_results_by_pr(sceneResponse, prList)
         print(f'Found {len(filteredSceneResponse)} scenes. Retrieving product ids...')
-        print(f'Warning: The M2M API only allows requesting 15000 scenes/15 min. landsatlinks will pause for 15 mins if rate limiting occurs.')
+        if len(filteredSceneResponse) >= 15000:
+            print(f'Warning: The M2M API only allows requesting 15000 scenes/15 min. '
+                  f'landsatlinks will pause for 15 mins if rate limiting occurs.')
         legacyIds = [s.get('entityId') for s in filteredSceneResponse]
         dlProductIds = api.get_download_options(dataset_name=datasetName, scene_ids=legacyIds)
         print(f'Writing results to {searchResultsPath}')
