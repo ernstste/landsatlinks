@@ -92,14 +92,14 @@ class eeapi(object):
                 'childFilters': childFilters
             }
         }
+        if seasonal_filter:
+            sceneFilter.update(seasonalFilter=seasonal_filter)
         searchParams = {
             'datasetName': dataset_name,
             'includeUnknownCloudCover': False,
             'maxResults': max_results,
             'sceneFilter': sceneFilter
         }
-        if seasonal_filter:
-            sceneFilter.update(seasonalFilter=seasonal_filter)
         if entity_id:
             searchParams.update(entityId=entity_id)
 
