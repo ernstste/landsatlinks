@@ -5,6 +5,6 @@ from python
 
 COPY . src
 
-RUN python -m pip install --use-feature=in-tree-build src/
+RUN python -m pip install src/
 
 CMD ["landsatlinks"]
