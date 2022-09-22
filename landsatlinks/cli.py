@@ -17,8 +17,9 @@ def main():
     searchResultsPath = os.path.realpath(args.results)
     utils.check_file_paths(searchResultsPath, 'search results')
     if not args.resume and os.path.exists(searchResultsPath):
-        print('Error: Search results file already exists. Use the --resume option if you want to use results from a '
-              'previous search. Exiting.')
+        print(f'Error: Search results file already exists at {searchResultsPath}. '
+              f'Use the --resume option if you want to use results from a previous search. '
+              f'Exiting.')
         exit(1)
     if args.resume and not os.path.exists(searchResultsPath):
         print(f"Error: Search results file does not exist at {searchResultsPath}. Exiting.\n"
@@ -88,22 +89,29 @@ def main():
 
     # First run: Create results file
     if not args.resume:
-        sceneResponse = api.scene_search(dataset_name=datasetName,
-                                         pr_list=prList,
-                                         start=start, end=end, seasonal_filter=seasonalFilter,
-                                         min_cc=minCC, max_cc=maxCC,
-                                         data_type_l1=data_type_l1, tier=tier)
+        sceneResponse = api.scene_search(
+            dataset_name=datasetName,
+            pr_list=prList,
+            start=start, end=end, seasonal_filter=seasonalFilter,
+            min_cc=minCC, max_cc=maxCC,
+            data_type_l1=data_type_l1, tier=tier
+        )
         filteredSceneResponse = utils.filter_results_by_pr(sceneResponse, prList)
-        print(f'Found {len(filteredSceneResponse)} scenes. Retrieving product ids...')
         if len(filteredSceneResponse) >= 15000:
             print(f'Warning: The M2M API only allows requesting 15000 scenes/15 min. '
                   f'landsatlinks will pause for 15 mins if rate limiting occurs.')
         legacyIds = [s.get('entityId') for s in filteredSceneResponse]
         dlProductIds = api.get_download_options(dataset_name=datasetName, scene_ids=legacyIds)
+        total_size = utils.bytes_to_humanreadable(sum([s.get('filesize') for s in dlProductIds]))
+        print(
+            f'Number of scenes found: {len(filteredSceneResponse)}\n'
+            f'Total size: {total_size}'
+        )
         print(f'Writing results to {searchResultsPath}')
         with open(searchResultsPath, 'w') as file:
             json.dump(dlProductIds, file)
 
+# TODO remove search results file from workflow, make this routine standard, remove resume flag
     # Consecutive runs: check filesystem for existing downloads
     if args.resume:
         try:
