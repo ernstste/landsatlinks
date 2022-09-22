@@ -134,8 +134,14 @@ class eeapi(object):
             # Make sure the product is available for this scene
             if product['productName'] == 'Landsat Collection 2 Level-1 Product Bundle':
                 if product['available'] is True:
-                    dlProductIds.append({'entityId': product['entityId'], 'productId': product['id'],
-                                         'displayId': product['displayId']})
+                    dlProductIds.append(
+                        {
+                            'entityId': product['entityId'],
+                            'productId': product['id'],
+                            'displayId': product['displayId'],
+                            'filesize': product['filesize']
+                        }
+                    )
 
         return dlProductIds
 
