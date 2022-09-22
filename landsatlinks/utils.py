@@ -1,6 +1,7 @@
+from math import floor, log
 from pathlib import Path
-import re
 import os
+import re
 import time
 
 
@@ -194,3 +195,9 @@ def check_file_paths(path, name):
     if not os.access(os.path.dirname(path), os.W_OK):
         print(f'Error: Directory where {name} are supposed to be stored does not exists or is not writeable. Exiting.')
         exit(1)
+
+
+def bytes_to_humanreadable(size):
+  power = 0 if size <= 0 else floor(log(size, 1024))
+  units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB']
+  return f"{round(size / 1024 ** power, 2)} {units[int(power)]}"
