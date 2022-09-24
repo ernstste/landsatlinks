@@ -11,22 +11,19 @@ def parse_cli_arguments():
         description='Creating download URLs for Landsat Collection 2 Level 1 data using the USGS machine-to-machine API'
     )
 
-    # positional arguments
-    parser.add_argument(
-        'results',
-        help='Path to the file containing the search results. This file should be in the download directory to allow '
-             'creating new download links when the old ones expired. The text file containing the download links will '
-             'be stored in the same directory.'
-    )
     parser.add_argument(
         'sensor',
         choices=['TM', 'ETM', 'OLI'],
         help='The sensor that scenes are requested for. Choose TM for Landsat 4/5, ETM for Landsat 7, '
-             'or OLI for Landsat 8.'
+             'or OLI for Landsat 8, or a comma-separated list (e.g. TM,ETM,OLI).'
     )
     parser.add_argument(
         'pathrowlist',
         help='Path to text file containing allowed path/rows, one per line. Format: PPPRRR (keep padding zeroes!).'
+    )
+    parser.add_argument(
+        'output_dir',
+        help='Path to the output directory where the download links and downloaded products will be stored.'
     )
 
     # optional arguments
@@ -63,12 +60,6 @@ def parse_cli_arguments():
         version=f'landsatlinks version {__version__} https://github.com/ernstste/landsatlinks'
     )
     parser.add_argument(
-        '-r', '--resume',
-        action='store_true',
-        help='Resume from prior search: Search the folder containing the results file for products that have already'
-             'been downloaded and only create download links for products that were not downloaded yet.'
-    )
-    parser.add_argument(
         '-s', '--secret',
         help='Path to a file containing the username and password for the USGS EarthExplorer.'
     )
@@ -78,8 +69,9 @@ def parse_cli_arguments():
              'have not been processed before.'
     )
     parser.add_argument(
-        '-o', '--output',
-        help='Define the output name of the file containing the download links.'
+        '-n', '--no-download',
+        action='store_true',
+        help='Generate download links but do not download the product bundles.'
     )
 
     return parser.parse_args()

@@ -16,7 +16,7 @@ with open(join(this_dir, 'README.md'), encoding='utf-8') as file:
 setup(
     name='landsatlinks',
     version=__version__,
-    description='Generating Landsat Collection 2 Level 1 download links using the USGS/EROS machine-to-machine API.',
+    description='Generate and download Landsat Collection 2 Level 1 urls using the USGS/EROS machine-to-machine API.',
     long_description=long_description,
     url='https://github.com/ernstste/landsatlinks',
     author='Stefan Ernst',
@@ -24,7 +24,7 @@ setup(
     license='MIT',
     keywords='landsat',
     packages=find_packages(),
-    install_requires=['requests'],
+    install_requires=['requests', 'tqdm'],
     entry_points={
         'console_scripts': [
             'landsatlinks=landsatlinks.cli:main',
