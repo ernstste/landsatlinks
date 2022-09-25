@@ -1,11 +1,13 @@
 from math import floor, log
 from pathlib import Path
+import platform
 import os
 import re
+import shutil
 import time
 
 
-def countdown(seconds):
+def countdown(seconds: int):
     while seconds:
         mins, secs = divmod(seconds, 60)
         timer = f'{mins:02d}:{secs:02d}'
@@ -15,14 +17,14 @@ def countdown(seconds):
     print('...resuming')
 
 
-def create_meta_dict(filter_id, filter_type, **kwargs):
+def create_meta_dict(filter_id: str, filter_type: str, **kwargs) -> dict:
     meta_dict = {'filterId': filter_id, 'filterType': filter_type}
     for name, value in kwargs.items():
         meta_dict[name] = value
     return meta_dict
 
 
-def create_child_filters(dataset_name, **kwargs):
+def create_child_filters(**kwargs) -> list:
     # use .get method to get value for key in position 1, use default value in 2 if key doesn't exist in dict
     data_type_l1 = kwargs.get('data_type_l1', 'L1TP')
     tier = kwargs.get('tier', 'T1')
@@ -101,7 +103,7 @@ def create_child_filters(dataset_name, **kwargs):
     return filters
 
 
-def filter_pathrow(scene_ids, pr_list):
+def filter_pathrow(scene_ids: list, pr_list: list) -> list:
     filtered_scenes = []
     for sceneName in scene_ids:
         if int(sceneName[10:16]) in pr_list:
@@ -110,17 +112,17 @@ def filter_pathrow(scene_ids, pr_list):
     return filtered_scenes
 
 
-def find_files(search_path, search_type, recursive=True):
+def find_files(search_path: str, search_type: str, recursive: bool = True, no_suffix: bool = True) -> list:
     # match Landsat 5/7/8/9 Collection 1/2 Level 1 folders and archives (.tar/.tar.gz)
     if search_type == 'product':
         regex_pattern = re.compile(
             '^L[C-T]0[45789]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.tar){0,1}(.gz){0,1}$')
+
     elif search_type == 'log':
         regex_pattern = re.compile(
             '^L[C-T]0[45789]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.tar){0,1}(.log)$')
     else:
-        print('Error: invalid search_type specified.')
-        exit()
+        raise ValueError(f'Error: invalid search_type specified. Received {search_type}, expected "product" or "log".')
 
     path = Path(search_path)
     if recursive:
@@ -133,13 +135,15 @@ def find_files(search_path, search_type, recursive=True):
     for filepath in file_paths:
         filename = filepath.name
         if regex_pattern.match(filename):
-            suffixes = ''.join(filepath.suffixes)
-            filename_nosuffix = str(filename).replace(suffixes, '')
-            scene_names.append(filename_nosuffix)
+            if no_suffix:
+                suffixes = ''.join(filepath.suffixes)
+                scene_names.append(str(filename).replace(suffixes, ''))
+            else:
+                scene_names.append(filename)
     return scene_names
 
 
-def check_tile_validity(tile_list):
+def check_tile_validity(tile_list: list) -> bool:
     regex_pattern = re.compile('^[0-2][0-9]{2}[0-2][0-9]{2}$')
     tiles_valid = True
     for path_row in tile_list:
@@ -152,7 +156,7 @@ def check_tile_validity(tile_list):
     return tiles_valid
 
 
-def load_tile_list(file_path):
+def load_tile_list(file_path: str) -> list:
     with open(file_path) as file:
         tile_list = [line.rstrip() for line in file]
     if not check_tile_validity(tile_list):
@@ -161,7 +165,7 @@ def load_tile_list(file_path):
     return tile_list
 
 
-def load_secret(file_path):
+def load_secret(file_path: str) -> list:
     with open(file_path) as file:
         secret = [line.rstrip() for line in file]
     if len(secret) != 2:
@@ -171,7 +175,7 @@ def load_secret(file_path):
     return secret
 
 
-def filter_results_by_pr(scene_response, pr_list):
+def filter_results_by_pr(scene_response: list, pr_list: list) -> list:
     filtered_scene_response = []
     for result in scene_response:
         if result['displayId'][10:16] in pr_list:
@@ -179,25 +183,47 @@ def filter_results_by_pr(scene_response, pr_list):
     return filtered_scene_response
 
 
-def remove_duplicate_productids(productids, pids_to_remove):
-    updated_pids = []
-    for i in range(len(productids)):
-        if productids[i]['displayId'] not in pids_to_remove:
-            updated_pids.append(productids[i])
-    return updated_pids
-
-
-def check_file_paths(path, name):
-    if not os.path.splitext(path)[1]:
-        print(f'Error: The specified {name} file does not seem to have a file ending.\n'
-              'Make sure to provide a path to a file, not a directory. Exiting.')
-        exit(1)
+def check_file_paths(path: str, name: str, file: bool = True):
+    if file:
+        if not os.path.splitext(path)[1]:
+            print(
+                f'Error: The specified {name} file does not seem to have a file ending.\n'
+                f'{path}\n'
+                f'Make sure to provide a path to a file, not a directory. Exiting.'
+            )
+            exit(1)
+    else:
+        if os.path.splitext(path)[1]:
+            print(
+                f'Error: The specified {name} directory does not seem to be a directory.\n'
+                f'{path}'
+                f'Make sure to provide a path to a directory, not a file. Exiting.'
+            )
+            exit(1)
     if not os.access(os.path.dirname(path), os.W_OK):
-        print(f'Error: Directory where {name} are supposed to be stored does not exists or is not writeable. Exiting.')
+        print(
+            f'Error: Directory where {name} are supposed to be stored does not exists or is not writeable:\n'
+            f'{path}\nExiting.'
+        )
         exit(1)
 
 
 def bytes_to_humanreadable(size):
-  power = 0 if size <= 0 else floor(log(size, 1024))
-  units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB']
-  return f"{round(size / 1024 ** power, 2)} {units[int(power)]}"
+    power = 0 if size <= 0 else floor(log(size, 1024))
+    units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB']
+    return f"{round(size / 1024 ** power, 2)} {units[int(power)]}"
+
+
+def check_dependencies(dependencies: list):
+    for dependency in dependencies:
+        if not shutil.which(dependency):
+            print(f'Error: {dependency} does not seem to be installed.\n'
+                  f'Please install or use the -n/--no-download option to download products manually. Exiting.')
+            exit(1)
+
+
+def check_os():
+    if platform.system() != 'Linux':
+        print('Error: Downloading product bundles is only implemented for Linux.\n'
+              'Please use the -n/--no-download option to download products manually. Exiting.')
+        exit(1)
