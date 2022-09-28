@@ -22,7 +22,7 @@ setup(
     author='Stefan Ernst',
     author_email='15325433+ernstste@users.noreply.github.com',
     license='MIT',
-    keywords='landsat',
+    keywords='landsat, usgs, m2m, api, download, earth observation, remote sensing',
     packages=find_packages(),
     install_requires=['requests', 'tqdm'],
     entry_points={
