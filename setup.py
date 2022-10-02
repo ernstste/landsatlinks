@@ -24,10 +24,12 @@ setup(
     license='MIT',
     keywords='landsat, usgs, m2m, api, download, earth observation, remote sensing',
     packages=find_packages(),
-    install_requires=['requests', 'tqdm'],
+    install_requires=['requests', 'tqdm', 'gdal'],
     entry_points={
         'console_scripts': [
             'landsatlinks=landsatlinks.cli:main',
         ],
     },
+    include_package_data=True,
+    package_data={'landsatlinks': ['assets/landsat_wrs2.gpkg']}
 )
