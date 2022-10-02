@@ -1,8 +1,9 @@
 import json
-import requests
 import sys
+
+import requests
+
 import landsatlinks.utils as utils
-import time
 
 
 class eeapi(object):

@@ -1,11 +1,12 @@
-from datetime import datetime
-from getpass import getpass
-from landsatlinks.eeapi import eeapi
-from landsatlinks.parseargs import parse_cli_arguments
-from landsatlinks import download, utils
 import os
 import re
 import signal
+from datetime import datetime
+from getpass import getpass
+
+from landsatlinks import download, utils, aoi
+from landsatlinks.eeapi import eeapi
+from landsatlinks.parseargs import parse_cli_arguments
 
 
 def handler(signum, frame):
@@ -41,7 +42,7 @@ def main():
     utils.validate_file_paths(output_dir, 'downloads', file=False)
 
     # load pathrow list
-    prList = utils.load_tile_list(args.pathrowlist)
+    prList = aoi.Aoi(args.aoi).get_footprints
 
     # dataset name
     if not all([sensor in ['TM', 'ETM', 'OLI'] for sensor in args.sensor.split(',')]):
@@ -130,12 +131,18 @@ def main():
     if args.forcelogs:
         print('\nChecking file system for FORCE Level-2 processing log files.')
         productIdsLogs = utils.find_files(search_path=log_path, search_type='log', recursive=True)
-        dlProductIds = [productid for productid in dlProductIds if productid['displayId'] not in productIdsLogs]
-        print(
-            f'{len(productIdsLogs)} FORCE log files found, '
-            f'{len(dlProductIds)} products from search results not processed by FORCE yet.\n'
-            f'Remaining download size: {utils.bytes_to_humanreadable(sum([s.get("filesize") for s in dlProductIds]))}'
-        )
+        if len(productIdsLogs) == 0:
+            print(f'No FORCE logs found at {log_path}')
+        else:
+            dlProductIds = [productid for productid in dlProductIds if productid['displayId'] not in productIdsLogs]
+            print(
+                f'{len(productIdsLogs)} FORCE log files found, '
+                f'{len(dlProductIds)} products from search results not processed by FORCE yet.\n'
+                f'Remaining download size: {utils.bytes_to_humanreadable(sum([s.get("filesize") for s in dlProductIds]))}'
+            )
+
+    if args.no_action:
+        exit(0)
 
     # Generate download links and save to disk
     urls = api.get_download_links(dl_product_ids=dlProductIds)
@@ -148,9 +155,6 @@ def main():
     with open(links_path, 'w') as file:
         file.write("\n".join(urls))
     api.logout()
-    if args.no_action:
-        print('Done.')
-        exit(0)
 
     # Download product bundles
     if args.download:

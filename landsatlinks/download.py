@@ -1,10 +1,13 @@
 import multiprocessing as mp
+import os
 import re
 import signal
-from landsatlinks import utils
-from tqdm import tqdm
-import os
 from datetime import datetime
+
+from tqdm import tqdm
+
+from landsatlinks import utils
+
 
 def load_links(filepath: str) -> list:
     utils.validate_file_paths(filepath, 'url', file=True, write=False)
@@ -60,7 +63,7 @@ def download_worker(url: str, dest: str) -> None:
 
 def download(urls: list, dest_folder: str, n_tasks: int = 3) -> str:
     pool = mp.Pool(n_tasks)
-    progress_bar = tqdm(total=len(urls), desc=f'Downloading', unit='product bundles', ascii=' >=')
+    progress_bar = tqdm(total=len(urls), desc=f'Downloading', unit='product bundle', ascii=' >=')
 
     for url in urls:
         pool.apply_async(download_worker, (url, dest_folder,), callback=lambda _: progress_bar.update())
