@@ -26,20 +26,31 @@ def main():
         print('No arguments provided, run "landsatlinks --help" for more information')
         exit(1)
 
+    # validate output directory
+    output_dir = os.path.realpath(args.output_dir)
+    utils.validate_file_paths(output_dir, 'downloads', file=False, write=True)
+
+    # validate FORCE queue file path
+    queue_path = args.queue_file
+    if queue_path:
+        if os.path.isfile(queue_path):
+            utils.validate_file_paths(queue_path, 'queue', file=True, write=True)
+        else:
+            queue_path_dir = os.path.dirname(queue_path)
+            utils.validate_file_paths(queue_path_dir, 'queue', file=False, write=True)
+
+    # check if user only wants to download only and go directly to download routine
     if all([arg in args for arg in ['url_file', 'output_dir']]):
         utils.check_os()
         utils.check_dependencies(['aria2c'])
-        download.download_standalone(args.url_file, args.output_dir)
+        utils.validate_file_paths(args.url_file, 'url file', file=True, write=False)
+        download.download_standalone(args.url_file, args.output_dir, queue_path)
         exit(0)
 
     # Check platform and dependencies in case the -n/--no-download flag is not set
     if args.download:
         utils.check_os()
         utils.check_dependencies(['aria2c'])
-
-    # validate output directory
-    output_dir = os.path.realpath(args.output_dir)
-    utils.validate_file_paths(output_dir, 'downloads', file=False)
 
     # load pathrow list
     prList = aoi.Aoi(args.aoi).get_footprints
@@ -82,7 +93,7 @@ def main():
               'Choose Tier 2 (T2) or Real-Time (RT) for processing levels lower than L1TP.')
         exit(1)
 
-    # path to FORCE Level-2 logs
+    # validate FORCE Level-2 log path
     if args.forcelogs:
         log_path = args.forcelogs
         utils.validate_file_paths(log_path, 'FORCE log', file=False, write=False)
@@ -94,6 +105,7 @@ def main():
         secret = utils.load_secret(os.path.realpath(args.secret))
         user, passwd = secret
     else:
+        print('\n')
         user = input('Enter your USGS EarthExplorer username: ')
         passwd = getpass('Enter your USGS EarthExplorer password: ')
     api = eeapi(user, passwd)
@@ -177,6 +189,6 @@ def main():
             print(f'{len(urls) - len(urls_to_download)} product bundles found in filesystem, '
                   f'{n_left} left to download.\n'
                   f'Remaining download size: {utils.bytes_to_humanreadable(data_volume_to_download)}\n')
-        download.download(urls_to_download, output_dir)
+        download.download(urls=urls_to_download, output_dir=output_dir, queue_fp=queue_path)
         print('Download complete')
         exit(0)

@@ -124,18 +124,18 @@ def validate_file_paths(path: str, name: str, file: bool = True, write: bool = F
         f_d = 'directory'
 
     if file:
-        if not os.path.splitext(path)[1]:
+        if not os.path.isfile(path):
             print(
-                f'Error: The specified {name} file does not seem to have a file ending.\n'
+                f'Error: The specified {name} file path does not seem to be a file.\n'
                 f'{path}\n'
                 f'Make sure to provide a path to a file, not a directory. Exiting.'
             )
             exit(1)
     else:
-        if os.path.splitext(path)[1]:
+        if not os.path.isdir(path):
             print(
                 f'Error: The specified {name} directory does not seem to be a directory.\n'
-                f'{path}'
+                f'{path}\n'
                 f'Make sure to provide a path to a directory, not a file. Exiting.'
             )
             exit(1)
