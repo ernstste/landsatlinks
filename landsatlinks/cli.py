@@ -147,6 +147,10 @@ def main():
             print(f'No FORCE logs found at {log_path}')
         else:
             dlProductIds = [productid for productid in dlProductIds if productid['displayId'] not in productIdsLogs]
+            if len(dlProductIds) == 0:
+                print(f'{len(productIdsLogs)} FORCE log files found, '
+                      f'all product bundles from searchalready processed.\nExiting.')
+                exit(0)
             print(
                 f'{len(productIdsLogs)} FORCE log files found, '
                 f'{len(dlProductIds)} products from search results not processed by FORCE yet.\n'
