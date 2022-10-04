@@ -42,7 +42,6 @@ def parse_cli_arguments():
     # optional arguments
     parser_search.add_argument(
         '-s', '--sensor',
-        choices=['TM', 'ETM', 'OLI'],
         default='TM,ETM,OLI',
         help='The sensor that scenes are requested for. Choose TM for Landsat 4/5, ETM for Landsat 7, '
              'or OLI for Landsat 8, or a comma-separated list (e.g. TM,ETM,OLI).'
@@ -91,10 +90,15 @@ def parse_cli_arguments():
         help='Path to FORCE Level-2 log files. Will skip products that have been processed by FORCE.'
     )
     parser_search.add_argument(
-        '--secret',
-        help='Path to the file containing the username and password for M2MApi access (EarthExplorer login).'
+        '-q', '--queue-file',
+        help='Path to FORCE queue file. Downloaded product bundles will be appended to the queue.',
+        default=None
     )
-
+    parser_search.add_argument(
+        '--secret',
+        help='Path to the file containing the username and password for M2MApi access (EarthExplorer login). '
+             'First line: username, second line: password.'
+    )
 
 
     # Download parser arguments
@@ -109,6 +113,12 @@ def parse_cli_arguments():
     parser_dl.add_argument(
         'output_dir',
         help='Path to the output directory where the downloaded products will be stored.'
+    )
+
+    parser_dl.add_argument(
+        '-q', '--queue-file',
+        help='Path to FORCE queue file. Downloaded product bundles will be appended to the queue.',
+        default=None
     )
 
     return parser.parse_args()

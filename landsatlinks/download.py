@@ -2,7 +2,6 @@ import multiprocessing as mp
 import os
 import re
 import signal
-from datetime import datetime
 
 from tqdm import tqdm
 
@@ -41,41 +40,54 @@ def check_for_downloaded_scenes(links: str, dest_folder: str, no_partial_dls: bo
     return not_downloaded
 
 
-def download_worker(url: str, dest: str) -> None:
+def create_force_queue(url: str, output_dir: str, queue_fp: str) -> None:
+    scene_name = f'{re.search(utils.PRODUCT_ID_REGEX, url).group(0)}.tar'
+    scene_path = os.path.join(os.path.realpath(output_dir), scene_name)
+
+    if os.path.exists(scene_path) and not os.path.exists(f'{scene_path}.aria2'):
+        with open(queue_fp, 'a') as f:
+            f.write(f'{scene_path} QUEUED\n')
+
+
+def download_worker(url: str, output_dir: str) -> None:
     import subprocess
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     subprocess.call(
         [
             'aria2c',
-            '--dir', dest,
+            '--dir', output_dir,
             '--max-concurrent-downloads', '3',
             '--max-connection-per-server', '5',
             '--max-tries', '5',
             '--retry-wait', '400',
             '--quiet',
             '--continue',
-            '--log', os.path.join(dest, f'landsatlinks_{datetime.strftime(datetime.now(), "%Y-%m-%dT%H%M%S")}.log'),
-            '--log-level', 'notice',
             url
         ]
     )
+    return url
 
 
-def download(urls: list, dest_folder: str, n_tasks: int = 3) -> str:
+def download(urls: list, output_dir: str, n_tasks: int = 3, queue_fp: str = None) -> None:
     pool = mp.Pool(n_tasks)
     progress_bar = tqdm(total=len(urls), desc=f'Downloading', unit='product bundle', ascii=' >=')
+    # logpath = os.path.join(output_dir, f'landsatlinks_{datetime.strftime(datetime.now(), "%Y-%m-%dT%H%M%S")}.log')
+
+    def callback(url):
+        # worker returns url to callback
+        if queue_fp:
+            create_force_queue(url, output_dir, queue_fp)
+        progress_bar.update()
 
     for url in urls:
-        pool.apply_async(download_worker, (url, dest_folder,), callback=lambda _: progress_bar.update())
+        pool.apply_async(download_worker, (url, output_dir, ), callback=callback)
     pool.close()
     pool.join()
 
-    return 'Download complete'
 
+def download_standalone(links_fp: str, output_dir: str, n_tasks: int = 3, queue_fp: str = None) -> str:
 
-def download_standalone(links_fp: str, output_dir: str, n_tasks: int = 3) -> str:
-
-    print(f'Loading urls from {links_fp}\n')
+    print(f'\nLoading urls from {links_fp}\n')
     urls = load_links(links_fp)
     check_for_broken_links(urls)
     urls_to_download = check_for_downloaded_scenes(urls, output_dir)
@@ -90,8 +102,6 @@ def download_standalone(links_fp: str, output_dir: str, n_tasks: int = 3) -> str
         f'{n_left} left to download.\n'
     )
 
-    download(urls_to_download, output_dir, n_tasks)
+    download(urls_to_download, output_dir, n_tasks, queue_fp)
 
     print('Download complete')
-
-
