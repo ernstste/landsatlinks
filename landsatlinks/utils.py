@@ -7,6 +7,7 @@ from math import floor, log
 from pathlib import Path
 
 PRODUCT_ID_REGEX = re.compile('(L[CET]0[45789]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_T1|T2|RT)')
+PROG_NAME = 'landsatlinks'
 
 
 def countdown(seconds: int):

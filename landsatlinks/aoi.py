@@ -118,6 +118,3 @@ class Aoi:
         a_layer.Intersection(b_layer, out_layer)
 
         return out_ds
-
-
-# aoi_fp = "/home/ernstste/code/landsatlinks/test/vec/berlin_32633.gpkg"

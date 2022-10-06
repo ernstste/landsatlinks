@@ -2,6 +2,7 @@ import argparse
 from datetime import date
 
 from landsatlinks import __version__
+from landsatlinks.utils import PROG_NAME
 
 
 def parse_cli_arguments():
@@ -10,9 +11,9 @@ def parse_cli_arguments():
 
     parser = argparse.ArgumentParser(
         description='Create download URLs for Landsat Collection 2 Level 1 data using the USGS machine-to-machine API. '
-                    'Use "landsatlinks search" to search for (and download) Landsat C1 Level 1 product bundles or '
-                    '"landsatlinks download" to only download product bundles from a prior search. '
-                    'Type "landsatlinks <command> --help" for more information. '
+                    f'Use "{PROG_NAME} search" to search for (and download) Landsat C1 Level 1 product bundles or '
+                    f'"{PROG_NAME} download" to only download product bundles from a prior search. '
+                    f'Type "{PROG_NAME} <command> --help" for more information. '
                     'https://github.com/ernstste/landsatlinks'
     )
     parser.add_argument(

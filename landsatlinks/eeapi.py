@@ -166,7 +166,7 @@ class eeapi(object):
         filteredSceneResponse = utils.filter_results_by_pr(sceneResponse, prList)
         if len(filteredSceneResponse) >= 15000:
             print(f'Warning: The M2M API only allows requesting 15000 scenes/15 min. '
-                  f'landsatlinks will pause for 15 mins if rate limiting occurs.')
+                  f'{utils.PROG_NAME} will pause for 15 mins if rate limiting occurs.')
         legacyIds = [s.get('entityId') for s in filteredSceneResponse]
         dlProductIds = self.get_download_options(dataset_name=datasetName, scene_ids=legacyIds)
 

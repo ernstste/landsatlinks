@@ -23,7 +23,7 @@ def main():
     args = parse_cli_arguments()
 
     if not vars(args):
-        print('No arguments provided, run "landsatlinks --help" for more information')
+        print(f'No arguments provided, run "{utils.PROG_NAME} --help" for more information')
         exit(1)
 
     # validate output directory
@@ -149,7 +149,7 @@ def main():
             dlProductIds = [productid for productid in dlProductIds if productid['displayId'] not in productIdsLogs]
             if len(dlProductIds) == 0:
                 print(f'{len(productIdsLogs)} FORCE log files found, '
-                      f'all product bundles from searchalready processed.\nExiting.')
+                      f'all product bundles from search already processed.\nExiting.')
                 exit(0)
             print(
                 f'{len(productIdsLogs)} FORCE log files found, '
