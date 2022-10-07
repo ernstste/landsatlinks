@@ -1,0 +1,16 @@
+name: trigger docker-publish in davidfrantz/base_image
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.DISPATCH }}
+          repository: davidfrantz/base_image
+          event-type: udf-dispatch
