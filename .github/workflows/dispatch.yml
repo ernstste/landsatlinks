@@ -1,8 +1,8 @@
 name: trigger docker-publish in davidfrantz/base_image
 
 on:
-  release:
-    branches: [ main ]
+  push:
+    branches: [ master ]
 
 jobs:
   dispatch:
