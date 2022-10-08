@@ -10,10 +10,7 @@ def parse_cli_arguments():
     currentDate = date.today().strftime('%Y-%m-%d')
 
     parser = argparse.ArgumentParser(
-        description='Create download URLs for Landsat Collection 2 Level 1 data using the USGS machine-to-machine API. '
-                    f'Use "{PROG_NAME} search" to search for (and download) Landsat C1 Level 1 product bundles or '
-                    f'"{PROG_NAME} download" to only download product bundles from a prior search. '
-                    f'Type "{PROG_NAME} <command> --help" for more information. '
+        description='Create download URLs for Landsat Collection 2 Level 1 product bundles using the USGS machine-to-machine API. '
                     'https://github.com/ernstste/landsatlinks'
     )
     parser.add_argument(
