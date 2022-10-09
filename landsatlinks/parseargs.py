@@ -46,8 +46,8 @@ def parse_cli_arguments():
     )
     parser_search.add_argument(
         '-d', '--daterange',
-        default=f'1970-01-01,{currentDate}',
-        help='Start date and end date. Format: YYYY-MM-DD,YYYY-MM-DD.\n'
+        default=f'19700101,{currentDate}',
+        help='Start date and end date. Format: YYYYMMDD,YYYYMMDD.\n'
              'Default: beginning of archive until today.'
     )
     parser_search.add_argument(

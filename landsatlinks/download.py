@@ -96,11 +96,13 @@ def download_standalone(links_fp: str, output_dir: str, n_tasks: int = 3, queue_
     if not n_left:
         print(f'All products already present in filesystem.\n{output_dir}\nExiting.')
         exit()
-
-    print(
-        f'{len(urls) - len(urls_to_download)} product bundles found in filesystem, '
-        f'{n_left} left to download.\n'
-    )
+    if n_left == len(urls):
+        print(f'Found {len(urls)} product bundle URLs.')
+    else:
+        print(
+            f'{len(urls) - n_left} of {len(urls)} product bundles found in filesystem, '
+            f'{n_left} left to download.\n'
+        )
 
     download(urls_to_download, output_dir, n_tasks, queue_fp)
 

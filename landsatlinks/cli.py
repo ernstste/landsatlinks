@@ -44,7 +44,7 @@ def main():
         utils.check_os()
         utils.check_dependencies(['aria2c'])
         utils.validate_file_paths(args.url_file, 'url file', file=True, write=False)
-        download.download_standalone(args.url_file, args.output_dir, queue_path)
+        download.download_standalone(links_fp=args.url_file, output_dir=args.output_dir, queue_fp=queue_path)
         exit(0)
 
     # Check platform and dependencies in case the -n/--no-download flag is not set
@@ -68,11 +68,11 @@ def main():
     dates = args.daterange.split(',')
     for date in dates:
         try:
-            datetime.strptime(date, '%Y-%m-%d')
+            datetime.strptime(date, '%Y%m%d')
         except ValueError:
-            print('Error: Dates not provided in format YYYY-MM-DD,YYYY-MM-DD or date is invalid.')
+            print('Error: Dates not provided in format YYYYMMDD,YYYYMMDD or date is invalid.')
             exit(1)
-    start, end = dates
+    start, end = [datetime.strftime(datetime.strptime(date, '%Y%m%d'), '%Y-%m-%d') for date in dates]
     # validate and set cloud cover thresholds
     minCC, maxCC = args.cloudcover.split(',')
     if not all([0 <= cc <= 100 for cc in [float(minCC), float(maxCC)]]):
@@ -142,57 +142,56 @@ def main():
     # Check for FORCE Level-2 log files in the filesystem
     if args.forcelogs:
         print('\nChecking file system for FORCE Level-2 processing log files.')
-        productIdsLogs = utils.find_files(search_path=log_path, search_type='log', recursive=True)
-        if len(productIdsLogs) == 0:
+        product_ids_logs = utils.find_files(search_path=log_path, search_type='log', recursive=True)
+        if len(product_ids_logs) == 0:
             print(f'No FORCE logs found at {log_path}')
         else:
-            dlProductIds = [productid for productid in dlProductIds if productid['displayId'] not in productIdsLogs]
+            dlProductIds = [productid for productid in dlProductIds if productid['displayId'] not in product_ids_logs]
             if len(dlProductIds) == 0:
-                print(f'{len(productIdsLogs)} FORCE log files found, '
+                print(f'{len(product_ids_logs)} FORCE log files found, '
                       f'all product bundles from search already processed.\nExiting.')
                 exit(0)
             print(
-                f'{len(productIdsLogs)} FORCE log files found, '
+                f'{len(product_ids_logs)} FORCE log files found, '
                 f'{len(dlProductIds)} products from search results not processed by FORCE yet.\n'
+                f'Remaining download size: {utils.bytes_to_humanreadable(sum([s.get("filesize") for s in dlProductIds]))}'
+            )
+
+    # Check for existing product bundles in filesystem
+    product_ids_filesystem = utils.find_files(search_path=output_dir, search_type='product', recursive=True)
+    if product_ids_filesystem:
+        dlProductIds = [productid for productid in dlProductIds if productid['displayId'] not in product_ids_filesystem]
+        if len(dlProductIds) == 0:
+            print(f'{len(product_ids_filesystem)} product bundles found in output directory, '
+                  f'nothing left to download.\nExiting.')
+            exit(0)
+        else:
+            print(
+                f'{len(product_ids_filesystem)} product bundles found in output directory, '
+                f'{len(dlProductIds)} not downloaded yet.\n'
                 f'Remaining download size: {utils.bytes_to_humanreadable(sum([s.get("filesize") for s in dlProductIds]))}'
             )
 
     if args.no_action:
         exit(0)
 
-    # Generate download links and save to disk
+    # Generate download links
     urls = api.get_download_links(dl_product_ids=dlProductIds)
-    timeNow = datetime.now().strftime('%Y%m%dT%H%M%S')
-    links_path = os.path.join(
-        output_dir,
-        f'urls_landsat_{args.sensor.replace(",", "_")}_{timeNow}.txt'
-    )
-    print(f'Writing download links to {links_path}\n')
-    with open(links_path, 'w') as file:
-        file.write("\n".join(urls))
     api.logout()
 
     # Download product bundles
     if args.download:
-
-        urls_to_download = download.check_for_downloaded_scenes(urls, output_dir, no_partial_dls=True)
-
-        # get corresponding entries from dlProductIds
-        if len(urls) != len(urls_to_download):
-            productIds_to_download = [
-                re.search(utils.PRODUCT_ID_REGEX, x)[0] for x in urls_to_download
-                if re.search(utils.PRODUCT_ID_REGEX, x)
-            ]
-            data_volume_to_download = sum(
-                [x.get('filesize') for x in dlProductIds if x.get('displayId') in productIds_to_download]
-            )
-            n_left = len(urls_to_download)
-            if not n_left:
-                print(f'All products already present in filesystem.\n{output_dir}\nExiting.')
-                exit()
-            print(f'{len(urls) - len(urls_to_download)} product bundles found in filesystem, '
-                  f'{n_left} left to download.\n'
-                  f'Remaining download size: {utils.bytes_to_humanreadable(data_volume_to_download)}\n')
-        download.download(urls=urls_to_download, output_dir=output_dir, queue_fp=queue_path)
+        download.download(urls=urls, output_dir=output_dir, queue_fp=queue_path)
         print('Download complete')
         exit(0)
+
+    # or just save download urls to disk
+    else:
+        timeNow = datetime.now().strftime('%Y%m%dT%H%M%S')
+        links_path = os.path.join(
+            output_dir,
+            f'urls_landsat_{args.sensor.replace(",", "_")}_{timeNow}.txt'
+        )
+        print(f'Writing download links to {links_path}\n')
+        with open(links_path, 'w') as file:
+            file.write("\n".join(urls))

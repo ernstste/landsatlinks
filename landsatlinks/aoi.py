@@ -53,7 +53,7 @@ class Aoi:
             pr_list.append(feat.GetField('PRFID'))
             feat = intersection.GetNextFeature()
 
-        return sorted(pr_list)
+        return sorted(list(set(pr_list)))
 
     @property
     def get_footprints(self):
