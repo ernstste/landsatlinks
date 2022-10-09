@@ -12,7 +12,7 @@ landsatlinks offers a simple command line interface to retrieve download links f
 ### Requirements
 User credentials to log in to the USGS EarthExplorer interface are required. Your user account needs to have access to the machine-to-machine API, which can be requested through the user profile page [here](https://ers.cr.usgs.gov/profile/access).\
 Python >= 3.6 is required. \
-aria2c is required to download product bundles (Linux only). You can still create links and download them manually if aria2c is not available.
+[aria2](https://github.com/aria2/aria2) is required to download product bundles (Linux only). You can still create links and download them manually if aria2 is not available.
 
 
 ### Installation
@@ -33,20 +33,18 @@ __download__ will download product bundles from a list of download links that we
 __landsatlinks search__ \
 There are two mandatory arguments required to run the tool and several optional arguments that allow a more detailed filtering of search results. A call may look like this:
 
-![search demo](https://github.com/ernstste/landsatlinks/raw/download/demo/landsatlinks_search_demo.gif)
-
-
-
+![search demo](https://github.com/ernstste/landsatlinks/raw/main/demo/landsatlinks_search_demo.gif)
 
 
 _required arguments:_
 - aoi\
-  The area of interest. Can be\
+  The area of interest. Valid input:\
   a) .txt - text file containing one tile per line in the format PPPRRR (P = path, R = row) \
   Keep padding zeroes! Good: 194023, bad: 19432\
   b) .shp, .gpkg, .geojson - vector file containing point, line, or polygon geometries.
 - output-dir\
-  The directory where the file containing the download urls (and product bundles) will be stored.
+  The directory where the file containing the download URLs or downloaded products will be stored. \
+  The `--download` option will deactivate saving of URLs.
 
 _optional arguments:_
 - -s | --sensor\
@@ -55,7 +53,7 @@ _optional arguments:_
   Default: All sensors
 - -d | --daterange\
   Start date and end date = date range to be considered.\
-  Format: YYYY-MM-DD,YYYY-MM-DD\
+  Format: YYYYMMDD,YYYYMMDD\
   Default: full archive until today.
 - -c | --cloudcover\
   Percent (land) cloud cover range to be considered.\
@@ -78,7 +76,7 @@ _optional arguments:_
 - -n | --no-action\
   Only search for product bundles and print info about search results without generating links or downloading.
 - -f | --forcelogs\
-  Path to FORCE log file directory (Level-2 processing logs)\
+  Path to FORCE log file directory (Level-2 processing logs, directory will be searched recursively)\
   Links will only be generated for products that haven't been processed by FORCE yet.
 - -q | --queue-file\
   Path to FORCE queue file.\
@@ -90,16 +88,16 @@ _optional arguments:_
 
 Example:
 ```
-landsatlinks search /home/aoi.shp /home/landsatlinks/ -s ETM,OLI -d 2019-01-01,2021-12-31 -c 0,70 -m 5,6,7,8 --no-action
+landsatlinks search ~/berlin.shp ~/level1 -s OLI -d 20180101,20201231 -m 10,11 -c 0,70 --secret ~/.m2m.txt --no-action
 
-Sensor(s): ETM, OLI
+Sensor(s): OLI
 Tile(s): 192023,192024,193023,193024
-Date range: 2019-01-01 to 2021-12-31
-Included months: 5,6,7,8
+Date range: 2018-01-01 to 2020-12-31
+Included months: 10,11
 Cloud cover: 0% to 70%
 
-116 Landsat Level 1 scenes matching criteria found
-50.02 GB data volume found
+20 Landsat Level 1 scenes matching criteria found
+22.13 GB data volume found
 ```
 
 __landatlinks download__
@@ -113,18 +111,19 @@ __landatlinks download__
 
 Example:
 ```
-landsatlinks download /home/landsatlinks/urls_landsat_TM_ETM_OLI_20221001T174038.txt /home/landsatlinks/
+landsatlinks download ~/landsatlinks/urls_landsat_TM_ETM_OLI_20221001T174038.txt ~/landsatlinks/
 
-Loading urls from /home/landsatlinks/test/urls_landsat_TM_ETM_OLI_20221001T174038.txt
+Loading urls from ~/landsatlinks/test/urls_landsat_TM_ETM_OLI_20221001T174038.txt
 
-6 product bundles found in filesystem, 110 left to download.
+6 of 116 product bundles found in filesystem, 110 left to download.
 
 Downloading: 5%|===>                                    | 6/110 [08:36<2:29:13, 100.97s/pproduct bundle/s]
 ```
 
-The output directory will be checked for existing product bundles and only the missing ones are downloaded. Partial downloads (product bundles that are accompanied by .aria2 files) will be continued.
+### Gotchas
+The output directory will be checked __recursively__ (i.e. including all subfolders) for existing product bundles and download URLs are only created for product bundles that were not found in the filesystem. All directories, .tar files, and .tar.gz files that match the [Landsat Collections Level-1 naming convention](https://www.usgs.gov/faqs/what-naming-convention-landsat-collection-2-level-1-and-level-2-scenes) are considered. Partial downloads (product bundles that are accompanied by .aria2 files) will be continued. 
 
-The M2M API is rate limited to 15,000 requests/15min. If you exceed this limit, the tool will wait for 15 and continue.
+The M2M API is rate limited to 15,000 requests/15min. If you exceed this limit, landsatlinks will wait for 15 minutes and continue afterwards. Checking for existing product bundles in the output directory happens before generating download URLs to reduce using unnecessary requests.
 
 ### License
 MIT
