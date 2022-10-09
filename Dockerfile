@@ -1,7 +1,5 @@
-# Dockerfile for landsatlinks
-# Copyright (C) 2021 David Frantz
-
-from python
+from osgeo/gdal:alpine-normal-3.5.2
+RUN apk add --update aria2 py3-pip
 
 COPY . src
 

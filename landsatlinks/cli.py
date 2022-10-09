@@ -1,11 +1,20 @@
-from datetime import datetime
-import json
-from getpass import getpass
 import os
 import re
+import signal
+from datetime import datetime
+from getpass import getpass
+
+from landsatlinks import download, utils, aoi
 from landsatlinks.eeapi import eeapi
 from landsatlinks.parseargs import parse_cli_arguments
-import landsatlinks.utils as utils
+
+
+def handler(signum, frame):
+    print('\nCTRL+C detected, exiting')
+    exit()
+
+
+signal.signal(signal.SIGINT, handler)
 
 
 def main():
@@ -13,67 +22,81 @@ def main():
     # 1. Check input and set up variables
     args = parse_cli_arguments()
 
-    # path to search results
-    searchResultsPath = os.path.realpath(args.results)
-    utils.check_file_paths(searchResultsPath, 'search results')
-    if not args.resume and os.path.exists(searchResultsPath):
-        print('Error: Search results file already exists. Use the --resume option if you want to use results from a '
-              'previous search. Exiting.')
-        exit(1)
-    if args.resume and not os.path.exists(searchResultsPath):
-        print(f"Error: Search results file does not exist at {searchResultsPath}. Exiting.\n"
-              f"(Did you accidentally set the --resume option?)")
+    if not vars(args):
+        print(f'No arguments provided, run "{utils.PROG_NAME} --help" for more information')
         exit(1)
 
-    # path to download links file
-    if args.output:
-        downloadLinksPath = os.path.realpath(args.output)
-        utils.check_file_paths(downloadLinksPath, 'download links')
+    # validate output directory
+    output_dir = os.path.realpath(args.output_dir)
+    utils.validate_file_paths(output_dir, 'downloads', file=False, write=True)
+
+    # validate FORCE queue file path
+    queue_path = args.queue_file
+    if queue_path:
+        if os.path.isfile(queue_path):
+            utils.validate_file_paths(queue_path, 'queue', file=True, write=True)
+        else:
+            queue_path_dir = os.path.dirname(queue_path)
+            utils.validate_file_paths(queue_path_dir, 'queue', file=False, write=True)
+
+    # check if user only wants to download only and go directly to download routine
+    if all([arg in args for arg in ['url_file', 'output_dir']]):
+        utils.check_os()
+        utils.check_dependencies(['aria2c'])
+        utils.validate_file_paths(args.url_file, 'url file', file=True, write=False)
+        download.download_standalone(links_fp=args.url_file, output_dir=args.output_dir, queue_fp=queue_path)
+        exit(0)
+
+    # Check platform and dependencies in case the -n/--no-download flag is not set
+    if args.download:
+        utils.check_os()
+        utils.check_dependencies(['aria2c'])
+
+    # load pathrow list
+    prList = aoi.Aoi(args.aoi).get_footprints
 
     # dataset name
-    sat_dict = {'TM': 'landsat_tm_c2_l1', 'ETM': 'landsat_etm_c2_l1', 'OLI': 'landsat_ot_c2_l1'}
-    datasetName = sat_dict[args.sensor]
-    # path to pathrow list
-    prListPath = os.path.realpath(args.pathrowlist)
-    if not os.path.exists(prListPath):
-        print('Error: PathRow list file does not exists. Check the filepath. Exiting.')
+    if not all([sensor in ['TM', 'ETM', 'OLI'] for sensor in args.sensor.split(',')]):
+        print('Error: Invalid sensor name. Please use one of the following: TM/ETM/OLI.\n'
+              'A comma-separated combination of sensor names is also possible (e.g. ETM,OLI)\n'
+              'Exiting.')
         exit(1)
+    sat_dict = {'TM': 'landsat_tm_c2_l1', 'ETM': 'landsat_etm_c2_l1', 'OLI': 'landsat_ot_c2_l1'}
+    datasetNames = [sat_dict[sensor] for sensor in args.sensor.split(',')]
 
-    # date range
+    # validate dates and set range
     dates = args.daterange.split(',')
-    dateRe = re.compile('[0-9]{4}-[0-1][0-9]-[0-3][0-9]')
     for date in dates:
-        if not dateRe.match(date):
-            print('Error: Dates not provided in the format YYYY-MM-DD,YYYY-MM-DD')
+        try:
+            datetime.strptime(date, '%Y%m%d')
+        except ValueError:
+            print('Error: Dates not provided in format YYYYMMDD,YYYYMMDD or date is invalid.')
             exit(1)
-    start, end = dates
-    # cloud cover
-    if args.cloudcover:
-        minCC, maxCC = args.cloudcover.split(',')
+    start, end = [datetime.strftime(datetime.strptime(date, '%Y%m%d'), '%Y-%m-%d') for date in dates]
+    # validate and set cloud cover thresholds
+    minCC, maxCC = args.cloudcover.split(',')
+    if not all([0 <= cc <= 100 for cc in [float(minCC), float(maxCC)]]):
+        print('Error: Cloud cover values must be between 0 and 100.')
+        exit(1)
     # seasonal filter
     seasonalFilter = [int(month) for month in args.months.split(',')]
+    if not all([1 <= month <= 12 for month in seasonalFilter]):
+        print('Error: Months must be between 1 and 12.')
+        exit(1)
     # processing level
-    data_type_l1 = args.level
+    dataTypeL1 = args.level
     # tier
     tier = args.tier
-    # make sure chosen combinations of tier and data_type_l1 make sense
-    if data_type_l1 != 'L1TP' and tier == 'T1':
+    # make sure chosen combinations of tier and dataTypeL1 make sense
+    if dataTypeL1 != 'L1TP' and tier == 'T1':
         print('Error: Tier 1 selected with processing level L1GT or L1GS (tier defaults to T1 if not specified).\n'
               'Choose Tier 2 (T2) or Real-Time (RT) for processing levels lower than L1TP.')
         exit(1)
-    # load pathrow list
-    try:
-        prList = utils.load_tile_list(prListPath)
-    except:
-        print(f'Could not load path row list from {prListPath}')
 
-    # path to FORCE Level-2 logs
+    # validate FORCE Level-2 log path
     if args.forcelogs:
-        logPath = os.path.realpath(args.forcelogs)
-        if not os.access(os.path.dirname(logPath), os.R_OK):
-            print('Error: Directory where FORCE log files are supposed to be stored does not exists or is not readable.'
-                  ' Exiting.')
-            exit(1)
+        log_path = args.forcelogs
+        utils.validate_file_paths(log_path, 'FORCE log', file=False, write=False)
 
     # ==================================================================================================================
     # 2. Run
@@ -82,70 +105,93 @@ def main():
         secret = utils.load_secret(os.path.realpath(args.secret))
         user, passwd = secret
     else:
+        print('\n')
         user = input('Enter your USGS EarthExplorer username: ')
         passwd = getpass('Enter your USGS EarthExplorer password: ')
     api = eeapi(user, passwd)
 
-    # First run: Create results file
-    if not args.resume:
-        sceneResponse = api.scene_search(dataset_name=datasetName,
-                                         pr_list=prList,
-                                         start=start, end=end, seasonal_filter=seasonalFilter,
-                                         min_cc=minCC, max_cc=maxCC,
-                                         data_type_l1=data_type_l1, tier=tier)
-        filteredSceneResponse = utils.filter_results_by_pr(sceneResponse, prList)
-        print(f'Found {len(filteredSceneResponse)} scenes. Retrieving product ids...')
-        if len(filteredSceneResponse) >= 15000:
-            print(f'Warning: The M2M API only allows requesting 15000 scenes/15 min. '
-                  f'landsatlinks will pause for 15 mins if rate limiting occurs.')
-        legacyIds = [s.get('entityId') for s in filteredSceneResponse]
-        dlProductIds = api.get_download_options(dataset_name=datasetName, scene_ids=legacyIds)
-        print(f'Writing results to {searchResultsPath}')
-        with open(searchResultsPath, 'w') as file:
-            json.dump(dlProductIds, file)
+    print(
+        f'\nSensor(s): {args.sensor.replace(",", ", ")}\n'
+        f'Tile(s): {",".join(prList)}\n'
+        f'Date range: {start} to {end}\n'
+        f'Included months: {",".join([str(month) for month in seasonalFilter])}\n'
+        f'Cloud cover: {minCC}% to {maxCC}%\n'
+    )
 
-    # Consecutive runs: check filesystem for existing downloads
-    if args.resume:
-        try:
-            with open(searchResultsPath, 'r') as file:
-                dlProductIds = json.load(file)
-        except:
-            print('Results file seems to be corrupt. Please fix or remove. Exiting')
-            exit(1)
-
-        print(f'Found {len(dlProductIds)} results from previous search at {searchResultsPath}.')
-        assert isinstance(dlProductIds, list) and all(isinstance(element, dict) for element in dlProductIds),\
-            f'Results file at {searchResultsPath} seems to be corrupt.\n' \
-            f'Did you select the correct file from your last search?'
-
-        # check for scenes already existing in the filesystem
-        downloadedScenes = utils.find_files(
-            search_path=os.path.dirname(searchResultsPath), search_type='product', recursive=True
+    # Get product IDs of products that match the search criteria
+    dlProductIds = []
+    for datasetName in datasetNames:
+        dlProductIds.extend(
+            api.retrieve_search_results(
+                datasetName=datasetName, data_type_l1=dataTypeL1, tier=tier,
+                start=start, end=end, seasonalFilter=seasonalFilter,
+                minCC=minCC, maxCC=maxCC,
+                prList=prList
+            )
         )
-        print(f'{len(downloadedScenes)} products found in file system.')
-        # only keep products if they don't exist on drive
-        dlProductIds = utils.remove_duplicate_productids(dlProductIds, downloadedScenes)
-        print(f'{len(dlProductIds)} products from previous search not found in filesystem.')
+    if not dlProductIds:
+        print('No scenes matching search results found. Exiting.')
+        exit(0)
+
+    total_size = utils.bytes_to_humanreadable(sum([s.get('filesize') for s in dlProductIds]))
+    print(
+        f'{len(dlProductIds)} Landsat Level 1 scenes matching criteria found\n'
+        f'{total_size} data volume found'
+    )
 
     # Check for FORCE Level-2 log files in the filesystem
     if args.forcelogs:
         print('\nChecking file system for FORCE Level-2 processing log files.')
-        productIdsLogs = utils.find_files(
-            search_path=logPath, search_type='log', recursive=True)
-        print(f'{len(productIdsLogs)} FORCE log files found.')
-        dlProductIds = utils.remove_duplicate_productids(dlProductIds, productIdsLogs)
-        print(f'{len(dlProductIds)} products from search results not processed by FORCE yet.')
+        product_ids_logs = utils.find_files(search_path=log_path, search_type='log', recursive=True)
+        if len(product_ids_logs) == 0:
+            print(f'No FORCE logs found at {log_path}')
+        else:
+            dlProductIds = [productid for productid in dlProductIds if productid['displayId'] not in product_ids_logs]
+            if len(dlProductIds) == 0:
+                print(f'{len(product_ids_logs)} FORCE log files found, '
+                      f'all product bundles from search already processed.\nExiting.')
+                exit(0)
+            print(
+                f'{len(product_ids_logs)} FORCE log files found, '
+                f'{len(dlProductIds)} products from search results not processed by FORCE yet.\n'
+                f'Remaining download size: {utils.bytes_to_humanreadable(sum([s.get("filesize") for s in dlProductIds]))}'
+            )
 
-    # Generate download links and save to disk
-    print(f'\nGenerating download links for {len(dlProductIds)} product bundles.')
+    # Check for existing product bundles in filesystem
+    product_ids_filesystem = utils.find_files(search_path=output_dir, search_type='product', recursive=True)
+    if product_ids_filesystem:
+        dlProductIds = [productid for productid in dlProductIds if productid['displayId'] not in product_ids_filesystem]
+        if len(dlProductIds) == 0:
+            print(f'{len(product_ids_filesystem)} product bundles found in output directory, '
+                  f'nothing left to download.\nExiting.')
+            exit(0)
+        else:
+            print(
+                f'{len(product_ids_filesystem)} product bundles found in output directory, '
+                f'{len(dlProductIds)} not downloaded yet.\n'
+                f'Remaining download size: {utils.bytes_to_humanreadable(sum([s.get("filesize") for s in dlProductIds]))}'
+            )
+
+    if args.no_action:
+        exit(0)
+
+    # Generate download links
     urls = api.get_download_links(dl_product_ids=dlProductIds)
-
-    timeNow = datetime.now().strftime('%Y%m%dT%H%M%S')
-    if not args.output:
-        downloadLinksPath = os.path.join(os.path.dirname(searchResultsPath), f'urls_{datasetName}_{timeNow}.txt')
-
-    print(f'Writing download links to {downloadLinksPath}')
-    with open(downloadLinksPath, 'w') as file:
-        file.write("\n".join(urls))
     api.logout()
-    print('Done.')
+
+    # Download product bundles
+    if args.download:
+        download.download(urls=urls, output_dir=output_dir, queue_fp=queue_path)
+        print('Download complete')
+        exit(0)
+
+    # or just save download urls to disk
+    else:
+        timeNow = datetime.now().strftime('%Y%m%dT%H%M%S')
+        links_path = os.path.join(
+            output_dir,
+            f'urls_landsat_{args.sensor.replace(",", "_")}_{timeNow}.txt'
+        )
+        print(f'Writing download links to {links_path}\n')
+        with open(links_path, 'w') as file:
+            file.write("\n".join(urls))

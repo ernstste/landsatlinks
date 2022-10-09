@@ -16,18 +16,20 @@ with open(join(this_dir, 'README.md'), encoding='utf-8') as file:
 setup(
     name='landsatlinks',
     version=__version__,
-    description='Generating Landsat Collection 2 Level 1 download links using the USGS/EROS machine-to-machine API.',
+    description='Generate and download Landsat Collection 2 Level 1 urls using the USGS/EROS machine-to-machine API.',
     long_description=long_description,
     url='https://github.com/ernstste/landsatlinks',
     author='Stefan Ernst',
     author_email='15325433+ernstste@users.noreply.github.com',
     license='MIT',
-    keywords='landsat',
+    keywords='landsat, usgs, m2m, api, download, earth observation, remote sensing',
     packages=find_packages(),
-    install_requires=['requests'],
+    install_requires=['requests', 'tqdm', 'gdal'],
     entry_points={
         'console_scripts': [
             'landsatlinks=landsatlinks.cli:main',
         ],
     },
+    include_package_data=True,
+    package_data={'landsatlinks': ['assets/landsat_wrs2.gpkg']}
 )

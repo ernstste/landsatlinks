@@ -1,10 +1,17 @@
-from pathlib import Path
-import re
 import os
+import platform
+import re
+import shutil
+import sys
 import time
+from math import floor, log
+from pathlib import Path
+
+PRODUCT_ID_REGEX = re.compile('(L[CET]0[45789]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_T1|T2|RT)')
+PROG_NAME = os.path.basename(sys.argv[0])
 
 
-def countdown(seconds):
+def countdown(seconds: int):
     while seconds:
         mins, secs = divmod(seconds, 60)
         timer = f'{mins:02d}:{secs:02d}'
@@ -14,112 +21,13 @@ def countdown(seconds):
     print('...resuming')
 
 
-def create_meta_dict(filter_id, filter_type, **kwargs):
-    meta_dict = {'filterId': filter_id, 'filterType': filter_type}
-    for name, value in kwargs.items():
-        meta_dict[name] = value
-    return meta_dict
-
-
-def create_child_filters(dataset_name, **kwargs):
-    # use .get method to get value for key in position 1, use default value in 2 if key doesn't exist in dict
-    data_type_l1 = kwargs.get('data_type_l1', 'L1TP')
-    tier = kwargs.get('tier', 'T1')
-    day_night = kwargs.get('day_night', 'DAY')
-
-    filters = []
-
-    if data_type_l1:
-        filters.append(
-            create_meta_dict(
-                filter_id='5e81f14fcf660794',
-                filter_type='value',
-                value=data_type_l1
-            )
-        )
-    if tier:
-        filters.append(
-            create_meta_dict(
-                filter_id='5e81f14fff5055a3',
-                filter_type='value',
-                value=tier
-            )
-        )
-    if day_night:
-        filters.append(
-            create_meta_dict(
-                filter_id='5e81f14f61bda7c4',
-                filter_type='value',
-                value=day_night
-            )
-        )
-    if 'max_cc' in kwargs and kwargs['max_cc']:
-        filters.append(
-            create_meta_dict(
-                '5f6aa1a4e0985d4c',
-                filter_type='between',
-                firstValue=0,
-                secondValue=kwargs['max_cc']
-            )
-        )
-    if 'path_min' in kwargs and 'path_max' in kwargs:
-        filters.append(
-            create_meta_dict(
-                '5e81f14f8faf8048',
-                filter_type='between',
-                firstValue=kwargs['path_min'],
-                secondValue=kwargs['path_max']
-            )
-        )
-    if 'row_min' in kwargs and 'row_max' in kwargs:
-        filters.append(
-            create_meta_dict(
-                '5e81f14f8d2a7c24',
-                filter_type='between',
-                firstValue=kwargs['row_min'],
-                secondValue=kwargs['row_max']
-            )
-        )
-    if 'sensor' in kwargs and kwargs['sensor']:
-        filters.append(
-            create_meta_dict(
-                filter_id='5e81f14f85d499dc',
-                filter_type='value',
-                value=kwargs['sensor']
-            )
-        )
-    if 'nadir' in kwargs and kwargs['nadir']:
-        filters.append(
-            create_meta_dict(
-                filter_id='5e81f150e42bc489',
-                filter_type='value',
-                value='NADIR'
-            )
-        )
-
-    return filters
-
-
-def filter_pathrow(scene_ids, pr_list):
-    filtered_scenes = []
-    for sceneName in scene_ids:
-        if int(sceneName[10:16]) in pr_list:
-            filtered_scenes.extend(sceneName)
-
-    return filtered_scenes
-
-
-def find_files(search_path, search_type, recursive=True):
-    # match Landsat 5/7/8/9 Collection 1/2 Level 1 folders and archives (.tar/.tar.gz)
-    if search_type == 'product':
-        regex_pattern = re.compile(
-            '^L[C-T]0[45789]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.tar){0,1}(.gz){0,1}$')
-    elif search_type == 'log':
-        regex_pattern = re.compile(
-            '^L[C-T]0[45789]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.tar){0,1}(.log)$')
-    else:
-        print('Error: invalid search_type specified.')
-        exit()
+def find_files(search_path: str, search_type: str,
+               recursive: bool = True, no_partial_dls: bool = False) -> list:
+    """
+    Returns a list of names of tar(.gz) archives and folders, or logs, that are Landsat Level 1 products.
+    :param no_partial_dls: If True, will not return product names if there they are accompanied by aria2 temp files, to
+    make sure partially downloaded files are going to be downloaded again.
+    """
 
     path = Path(search_path)
     if recursive:
@@ -128,17 +36,39 @@ def find_files(search_path, search_type, recursive=True):
         glob_pattern = '*'
     file_paths = list(path.glob(glob_pattern))
 
+    # match Landsat 5/7/8/9 Collection 1/2 Level 1 folders and archives (.tar/.tar.gz)
+    if search_type == 'product':
+        regex_pattern_string = \
+            '^L[C-T]0[45789]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.tar){0,1}(.gz){0,1}$'
+        if no_partial_dls:
+            regex_pattern_aria = re.compile(regex_pattern_string.replace('$', '.aria2$'))
+            aria_tempfiles = [re.sub('\.tar\.aria2$', '', file_path.name) for file_path in file_paths
+                              if re.match(regex_pattern_aria, file_path.name)]
+
+    elif search_type == 'log':
+        regex_pattern_string = \
+            '^L[C-T]0[45789]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_(RT|T1|T2)(.tar){0,1}(.log)$'
+    else:
+        raise ValueError(f'Error: invalid search_type specified. Received {search_type}, expected "product" or "log".')
+
+    regex_pattern = re.compile(regex_pattern_string)
+
     scene_names = []
     for filepath in file_paths:
         filename = filepath.name
         if regex_pattern.match(filename):
             suffixes = ''.join(filepath.suffixes)
-            filename_nosuffix = str(filename).replace(suffixes, '')
-            scene_names.append(filename_nosuffix)
+            filename = str(filename).replace(suffixes, '')
+            if no_partial_dls:
+                if filename not in aria_tempfiles:
+                    scene_names.append(filename)
+            else:
+                scene_names.append(filename)
+
     return scene_names
 
 
-def check_tile_validity(tile_list):
+def check_tile_validity(tile_list: list) -> bool:
     regex_pattern = re.compile('^[0-2][0-9]{2}[0-2][0-9]{2}$')
     tiles_valid = True
     for path_row in tile_list:
@@ -151,7 +81,9 @@ def check_tile_validity(tile_list):
     return tiles_valid
 
 
-def load_tile_list(file_path):
+def load_tile_list(file_path: str) -> list:
+    full_path = os.path.realpath(file_path)
+    validate_file_paths(full_path, 'tile list', file=True, write=False)
     with open(file_path) as file:
         tile_list = [line.rstrip() for line in file]
     if not check_tile_validity(tile_list):
@@ -160,7 +92,17 @@ def load_tile_list(file_path):
     return tile_list
 
 
-def load_secret(file_path):
+def filter_results_by_pr(scene_response: list, pr_list: list) -> list:
+    filtered_scene_response = []
+    for result in scene_response:
+        if result['displayId'][10:16] in pr_list:
+            filtered_scene_response.append(result)
+    return filtered_scene_response
+
+
+def load_secret(file_path: str) -> list:
+    full_path = os.path.realpath(file_path)
+    validate_file_paths(full_path, 'secrets', file=True, write=False)
     with open(file_path) as file:
         secret = [line.rstrip() for line in file]
     if len(secret) != 2:
@@ -170,27 +112,56 @@ def load_secret(file_path):
     return secret
 
 
-def filter_results_by_pr(scene_response, pr_list):
-    filtered_scene_response = []
-    for result in scene_response:
-        if result['displayId'][10:16] in pr_list:
-            filtered_scene_response.append(result)
-    return filtered_scene_response
+def validate_file_paths(path: str, name: str, file: bool = True, write: bool = False) -> str:
+    path = os.path.realpath(path)
+    if write:
+        rw = os.W_OK
+        rw_string = 'writeable'
+    else:
+        rw = os.R_OK
+        rw_string = 'readable'
+    if file:
+        f_d = 'file'
+    else:
+        f_d = 'directory'
 
-
-def remove_duplicate_productids(productids, pids_to_remove):
-    updated_pids = []
-    for i in range(len(productids)):
-        if productids[i]['displayId'] not in pids_to_remove:
-            updated_pids.append(productids[i])
-    return updated_pids
-
-
-def check_file_paths(path, name):
-    if not os.path.splitext(path)[1]:
-        print(f'Error: The specified {name} file does not seem to have a file ending.\n'
-              'Make sure to provide a path to a file, not a directory. Exiting.')
+    if file:
+        if not os.path.isfile(path):
+            print(
+                f'Error: The specified {name} file path does not seem to be a file.\n'
+                f'{path}\n'
+                f'Make sure to provide a path to a file, not a directory. Exiting.'
+            )
+            exit(1)
+    else:
+        if not os.path.isdir(path):
+            print(
+                f'Error: The specified {name} directory does not seem to be a directory.\n'
+                f'{path}\n'
+                f'Make sure to provide a path to a directory, not a file. Exiting.'
+            )
+            exit(1)
+    if not os.access(path, rw):
+        print(f"Error: {name.capitalize()} {f_d} does not exist or is not {rw_string}:\n{path}")
         exit(1)
-    if not os.access(os.path.dirname(path), os.W_OK):
-        print(f'Error: Directory where {name} are supposed to be stored does not exists or is not writeable. Exiting.')
+
+
+def bytes_to_humanreadable(size):
+    power = 0 if size <= 0 else floor(log(size, 1024))
+    units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB']
+    return f"{round(size / 1024 ** power, 2)} {units[int(power)]}"
+
+
+def check_os():
+    if platform.system() != 'Linux':
+        print('Error: Downloading product bundles is only implemented for Linux.\n'
+              'Please use the -n/--no-download option to download products manually. Exiting.')
         exit(1)
+
+
+def check_dependencies(dependencies: list):
+    for dependency in dependencies:
+        if not shutil.which(dependency):
+            print(f'Error: {dependency} does not seem to be installed.\n'
+                  f'Please install or use the -n/--no-download option to download products manually. Exiting.')
+            exit(1)
