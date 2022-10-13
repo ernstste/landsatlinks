@@ -7,7 +7,7 @@ from landsatlinks.utils import PROG_NAME
 
 def parse_cli_arguments():
 
-    currentDate = date.today().strftime('%Y-%m-%d')
+    currentDate = date.today().strftime('%Y%m%d')
 
     parser = argparse.ArgumentParser(
         description='Create download URLs for Landsat Collection 2 Level 1 product bundles using the USGS machine-to-machine API. '
