@@ -81,7 +81,7 @@ _optional arguments:_
 - -q | --queue-file\
   Path to FORCE queue file.\
   Downloaded product bundle file paths will be appended to the queue.
-- -s | --secret\
+- \--secret\
   Path to the file containing the username and password for M2MApi access (EarthExplorer login).\
   Avoids having to enter credentials every time the tool is run.\
   First line: user, second line: password
