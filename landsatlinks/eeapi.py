@@ -14,14 +14,14 @@ class eeapi(object):
 
     def login(self, user: str, password: str) -> str:
         loginData = json.dumps({'username': user, 'password': password, 'catalogID': 'EE'})
-        response = requests.post(f'{self.endpoint}login?', data=loginData).json()
-        if response.get('errorCode', None):
-            print(f'Error: {response["errorCode"]}: {response["errorMessage"]}\n'
-                  'Please check your login data.\n'
-                  'Login will fail if you did not request access to the M2M API yet.\n'
-                  'Request access through your user profile at https://ers.cr.usgs.gov/')
-            exit(1)
-        return response['data']
+        with requests.post(f'{self.endpoint}login?', data=loginData).json() as response:
+            if response.get('errorCode', None):
+                print(f'Error: {response["errorCode"]}: {response["errorMessage"]}\n'
+                      'Please check your login data.\n'
+                      'Login will fail if you did not request access to the M2M API yet.\n'
+                      'Request access through your user profile at https://ers.cr.usgs.gov/')
+                exit(1)
+            return response['data']
 
     def logout(self) -> None:
         self.request('logout')
@@ -38,22 +38,23 @@ class eeapi(object):
         url = f'{self.endpoint}{request_code}'
         params = json.dumps(kwargs)
         headers = {'X-Auth-Token': self.key}
-        response = requests.post(url, params, headers=headers).json()
-        if response.get('errorCode', None):
-            if response['errorCode'] == 'RATE_LIMIT_USER_DL':
-                print('Rate limit exceeded. Will sleep for 15 minutes.')
-                utils.countdown(905)
-                response = requests.post(url, params, headers=headers).json()
-                if response.get('errorCode', None):
+        with requests.post(url, params, headers=headers).json() as response:
+            if response.get('errorCode', None):
+                if response['errorCode'] == 'RATE_LIMIT_USER_DL':
+                    print('Rate limit exceeded. Will sleep for 15 minutes.')
+                    utils.countdown(905)
+                    with requests.post(url, params, headers=headers).json() as r:
+                        if r.get('errorCode', None):
+                            print(f'Error: {r["errorCode"]}: {r["errorMessage"]}')
+                            print('M2M API threw an error despite waiting.\n'
+                                  'Please open an issue on github if the error persists.')
+                            sys.exit(1)
+                        return r['data']
+                else:
                     print(f'Error: {response["errorCode"]}: {response["errorMessage"]}')
-                    print('M2M API threw an error despite waiting.\nPlease open an issue on github if the error persists.')
                     sys.exit(1)
-                return response['data']
             else:
-                print(f'Error: {response["errorCode"]}: {response["errorMessage"]}')
-                sys.exit(1)
-        else:
-            return response['data']
+                return response['data']
 
     def scene_search(self,
                      start: str, end: str,
