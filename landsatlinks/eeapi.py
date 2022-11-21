@@ -14,7 +14,8 @@ class eeapi(object):
 
     def login(self, user: str, password: str) -> str:
         loginData = json.dumps({'username': user, 'password': password, 'catalogID': 'EE'})
-        with requests.post(f'{self.endpoint}login?', data=loginData).json() as response:
+        with requests.post(f'{self.endpoint}login?', data=loginData) as r:
+            response = r.json()
             if response.get('errorCode', None):
                 print(f'Error: {response["errorCode"]}: {response["errorMessage"]}\n'
                       'Please check your login data.\n'
@@ -38,7 +39,8 @@ class eeapi(object):
         url = f'{self.endpoint}{request_code}'
         params = json.dumps(kwargs)
         headers = {'X-Auth-Token': self.key}
-        with requests.post(url, params, headers=headers).json() as response:
+        with requests.post(url, params, headers=headers) as r:
+            response = r.json()
             if response.get('errorCode', None):
                 if response['errorCode'] == 'RATE_LIMIT_USER_DL':
                     print('Rate limit exceeded. Will sleep for 15 minutes.')
