@@ -22,10 +22,10 @@ def countdown(seconds: int):
 
 
 def find_files(search_path: str, search_type: str,
-               recursive: bool = True, no_partial_dls: bool = False) -> list:
+               recursive: bool = True, no_partial_dls: bool = True) -> list:
     """
     Returns a list of names of tar(.gz) archives and folders, or logs, that are Landsat Level 1 products.
-    :param no_partial_dls: If True, will not return product names if there they are accompanied by aria2 temp files, to
+    :param no_partial_dls: If True, do not return product names if they are accompanied by aria2 temp files, to
     make sure partially downloaded files are going to be downloaded again.
     """
 
