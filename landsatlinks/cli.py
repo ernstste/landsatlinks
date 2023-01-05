@@ -181,7 +181,7 @@ def main():
 
     # Download product bundles
     if args.download:
-        download.download(urls=urls, output_dir=output_dir, queue_fp=queue_path)
+        download.download(urls=urls, output_dir=output_dir, force_queue_fp=queue_path)
         print('Download complete')
         exit(0)
 

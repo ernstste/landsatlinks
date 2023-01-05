@@ -45,13 +45,14 @@ class eeapi(object):
                 if response['errorCode'] == 'RATE_LIMIT_USER_DL':
                     print('Rate limit exceeded. Will sleep for 15 minutes.')
                     utils.countdown(905)
-                    with requests.post(url, params, headers=headers).json() as r:
-                        if r.get('errorCode', None):
-                            print(f'Error: {r["errorCode"]}: {r["errorMessage"]}')
+                    with requests.post(url, params, headers=headers) as rr:
+                        rresponse = rr.json()
+                        if rresponse.get('errorCode', None):
+                            print(f'Error: {rresponse["errorCode"]}: {rresponse["errorMessage"]}')
                             print('M2M API threw an error despite waiting.\n'
                                   'Please open an issue on github if the error persists.')
                             sys.exit(1)
-                        return r['data']
+                        return rresponse['data']
                 else:
                     print(f'Error: {response["errorCode"]}: {response["errorMessage"]}')
                     sys.exit(1)
