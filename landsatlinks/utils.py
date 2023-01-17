@@ -59,7 +59,7 @@ def find_files(search_path: str, search_type: str,
         if regex_pattern.match(filename):
             suffixes = ''.join(filepath.suffixes)
             filename = str(filename).replace(suffixes, '')
-            if no_partial_dls:
+            if no_partial_dls and search_type == 'product':
                 if filename not in aria_tempfiles:
                     scene_names.append(filename)
             else:
