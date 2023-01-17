@@ -19,7 +19,7 @@ def load_links(filepath: str) -> list:
 
 
 def check_for_broken_links(links: list) -> bool:
-    pattern = re.compile('https://landsatlook\.usgs\.gov/gen-bundle\?landsat_product_id=.{258,262}$')
+    pattern = re.compile('^https://landsatlook\.usgs\.gov/gen-bundle\?landsat_product_id=')
     broken_links = [link for link in links if not re.match(pattern, link)]
     if broken_links:
         print(f'Some links seem to be broken, please check:')
