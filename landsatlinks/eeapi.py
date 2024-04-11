@@ -63,6 +63,7 @@ class eeapi(object):
                      start: str, end: str,
                      dataset_name: str = None, entity_id=None,
                      seasonal_filter: list = None, pr_list: list = None,
+                     ingest_filter: list = None,
                      max_results: int = 50000, **kwargs):
         """
         Search for scenes matching search criteria
@@ -102,6 +103,10 @@ class eeapi(object):
         }
         if seasonal_filter:
             sceneFilter.update(seasonalFilter=seasonal_filter)
+        if ingest_filter:
+            sceneFilter.update(
+                ingestFilter={'start': ingest_filter[0], 'end': ingest_filter[1]}
+            )
         searchParams = {
             'datasetName': dataset_name,
             'includeUnknownCloudCover': False,
@@ -152,7 +157,7 @@ class eeapi(object):
 
     def retrieve_search_results(
             self, datasetName, data_type_l1, tier,
-            start, end, seasonalFilter,
+            start, end, seasonalFilter, ingestFilter,
             minCC, maxCC,
             prList
     ):
@@ -164,6 +169,7 @@ class eeapi(object):
             dataset_name=datasetName,
             pr_list=prList,
             start=start, end=end, seasonal_filter=seasonalFilter,
+            ingest_filter=ingestFilter,
             min_cc=minCC, max_cc=maxCC,
             data_type_l1=data_type_l1, tier=tier
         )

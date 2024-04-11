@@ -4,6 +4,7 @@ import re
 import shutil
 import sys
 import time
+from datetime import datetime
 from math import floor, log
 from pathlib import Path
 
@@ -67,6 +68,14 @@ def find_files(search_path: str, search_type: str,
 
     return scene_names
 
+
+def check_date_validity(dates: list, name: str) -> None:
+    for date in dates:
+        try:
+            datetime.strptime(date, '%Y%m%d')
+        except ValueError:
+            print(f'Error: {name} dates not provided in format YYYYMMDD,YYYYMMDD or date is invalid.\ndate')
+            exit(1)
 
 def check_tile_validity(tile_list: list) -> bool:
     regex_pattern = re.compile('^[0-2][0-9]{2}[0-2][0-9]{2}$')

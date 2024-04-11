@@ -66,12 +66,7 @@ def main():
 
     # validate dates and set range
     dates = args.daterange.split(',')
-    for date in dates:
-        try:
-            datetime.strptime(date, '%Y%m%d')
-        except ValueError:
-            print('Error: Dates not provided in format YYYYMMDD,YYYYMMDD or date is invalid.')
-            exit(1)
+    utils.check_date_validity(dates, 'Start/End')
     start, end = [datetime.strftime(datetime.strptime(date, '%Y%m%d'), '%Y-%m-%d') for date in dates]
     # validate and set cloud cover thresholds
     minCC, maxCC = args.cloudcover.split(',')
@@ -83,6 +78,11 @@ def main():
     if not all([1 <= month <= 12 for month in seasonalFilter]):
         print('Error: Months must be between 1 and 12.')
         exit(1)
+    # ingestion time filter
+    ingest_dates = args.ingestrange.split(',')
+    utils.check_date_validity(ingest_dates, 'Ingest')
+    ingest_filter = [datetime.strftime(datetime.strptime(date, '%Y%m%d'), '%Y-%m-%d') for date in ingest_dates]
+
     # processing level
     dataTypeL1 = args.level
     # tier
@@ -125,6 +125,7 @@ def main():
             api.retrieve_search_results(
                 datasetName=datasetName, data_type_l1=dataTypeL1, tier=tier,
                 start=start, end=end, seasonalFilter=seasonalFilter,
+                ingestFilter=ingest_filter,
                 minCC=minCC, maxCC=maxCC,
                 prList=prList
             )

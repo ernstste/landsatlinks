@@ -61,6 +61,13 @@ def parse_cli_arguments():
         help='Seasonal filter - months to be considered. \nDefault: 1,2,3,4,5,6,7,8,9,10,11,12'
     )
     parser_search.add_argument(
+        '-i', '--ingestrange',
+        default=f'19700101,{currentDate}',
+        help='Filter for when data was added to USGS EROS archive.\n'
+             'Start and end date. Format: YYYYMMDD,YYYYMMDD.\n'
+             'Default: beginning of archive until today.'
+    )
+    parser_search.add_argument(
         '-t', '--tier',
         choices=['T1', 'T2'],
         default='T1',
