@@ -75,8 +75,8 @@ def main():
     start, end = [datetime.strftime(datetime.strptime(date, '%Y%m%d'), '%Y-%m-%d') for date in dates]
     # validate and set cloud cover thresholds
     minCC, maxCC = args.cloudcover.split(',')
-    if not all([0 <= cc <= 100 for cc in [float(minCC), float(maxCC)]]):
-        print('Error: Cloud cover values must be between 0 and 100.')
+    if not all([-1 <= cc <= 100 for cc in [float(minCC), float(maxCC)]]):
+        print('Error: Cloud cover values must be between -1 and 100.')
         exit(1)
     # seasonal filter
     seasonalFilter = [int(month) for month in args.months.split(',')]
