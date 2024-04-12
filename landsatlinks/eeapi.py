@@ -195,9 +195,10 @@ class eeapi(object):
         urls = []
         for i, downloads in enumerate(dlSplit):
             dl_request_params = {'downloads': downloads}
-            # Call the download to get the direct download urls
+            # Call the download request to get the download urls
             response = self.request('download-request', **dl_request_params)
-            for download in response['availableDownloads']:
+            all_downloads = response['availableDownloads'] + response['preparingDownloads']
+            for download in all_downloads:
                 urls.append(download['url'])
 
         return urls

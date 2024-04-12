@@ -1,3 +1,4 @@
+import json
 import multiprocessing
 import multiprocessing as mp
 import os
@@ -19,7 +20,9 @@ def load_links(filepath: str) -> list:
 
 
 def check_for_broken_links(links: list) -> bool:
-    pattern = re.compile('^https://landsatlook\.usgs\.gov/gen-bundle\?landsat_product_id=')
+    pattern1 = '^https://landsatlook\.usgs\.gov/gen-bundle\?landsat_product_id='
+    pattern2 = '^https://dds\.cr\.usgs\.gov/download/'
+    pattern = f'({pattern1})|({pattern2})'
     broken_links = [link for link in links if not re.match(pattern, link)]
     if broken_links:
         print(f'Some links seem to be broken, please check:')
@@ -52,21 +55,23 @@ def create_force_queue(url: str, output_dir: str, queue_fp: str) -> None:
 
 def download_worker(url: str, output_dir: str, mp_queue: multiprocessing.Queue) -> None:
     import subprocess
+    import re
+    PRODUCT_ID_REGEX = re.compile('(L[CET]0[45789]_L1[A-Z]{2}_[0-9]{6}_[0-9]{8}_[0-9]{8}_0[12]_T1|T2|RT)')
+
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-    subprocess.call(
-        [
-            'aria2c',
-            '--dir', output_dir,
-            '--max-concurrent-downloads', '3',
-            '--max-connection-per-server', '5',
-            '--max-tries', '5',
-            '--retry-wait', '400',
-            '--quiet',
-            '--continue',
-            url
-        ]
-    )
-    mp_queue.put(url)
+    cmd = [
+        'aria2c',
+        '--dir', output_dir,
+        '--max-concurrent-downloads', '3',
+        '--max-connection-per-server', '5',
+        '--max-tries', '5',
+        '--retry-wait', '400',
+        '--continue',
+        url
+    ]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    product_id = re.search(PRODUCT_ID_REGEX, result.stdout).group(0)
+    mp_queue.put(product_id)
 
     return url
 
@@ -77,11 +82,11 @@ def dl_listener_for_force_queue(output_dir: str, queue_fp: str, mp_queue: multip
     if queue_fp:
         with open(queue_fp, 'a') as f:
             while True:
-                url = mp_queue.get()
-                if url == 'finished':
+                product_id = mp_queue.get()
+                if product_id == 'finished':
                     break
 
-                scene_name = f'{re.search(utils.PRODUCT_ID_REGEX, url).group(0)}.tar'
+                scene_name = f'{product_id}.tar'
                 scene_path = os.path.join(os.path.realpath(output_dir), scene_name)
                 if os.path.exists(scene_path) and not os.path.exists(f'{scene_path}.aria2'):
                     f.write(f'{scene_path} QUEUED\n')
@@ -89,8 +94,8 @@ def dl_listener_for_force_queue(output_dir: str, queue_fp: str, mp_queue: multip
 
     else:
         while True:
-            url = mp_queue.get()
-            if url == 'finished':
+            product_id = mp_queue.get()
+            if product_id == 'finished':
                 break
 
 
@@ -102,7 +107,6 @@ def download(urls: list, output_dir: str, n_tasks: int = 4, force_queue_fp: str 
     watcher = pool.apply_async(dl_listener_for_force_queue, (output_dir, force_queue_fp, mp_queue))
 
     progress_bar = tqdm(total=len(urls), desc=f'Downloading', unit='product bundle', ascii=' >=')
-    # logpath = os.path.join(output_dir, f'landsatlinks_{datetime.strftime(datetime.now(), "%Y-%m-%dT%H%M%S")}.log')
 
     def callback(url):
         progress_bar.update()
@@ -123,7 +127,7 @@ def download(urls: list, output_dir: str, n_tasks: int = 4, force_queue_fp: str 
     pool.join()
 
 
-def download_standalone(links_fp: str, output_dir: str, n_tasks: int = 3, queue_fp: str = None) -> str:
+def download_standalone(links_fp: str, output_dir: str, n_tasks: int = 4, queue_fp: str = None) -> str:
 
     print(f'\nLoading urls from {links_fp}\n')
     urls = load_links(links_fp)

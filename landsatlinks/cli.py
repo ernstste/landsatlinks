@@ -1,5 +1,4 @@
 import os
-import re
 import signal
 from datetime import datetime
 from getpass import getpass
