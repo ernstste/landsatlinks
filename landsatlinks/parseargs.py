@@ -52,8 +52,8 @@ def parse_cli_arguments():
     )
     parser_search.add_argument(
         '-c', '--cloudcover',
-        default='0,100',
-        help='Percent (land) cloud cover range to be considered. \nDefault: 0,100'
+        default='-1,100',
+        help='Percent (land) cloud cover range to be considered. \nDefault: -1,100'
     )
     parser_search.add_argument(
         '-m', '--months',
