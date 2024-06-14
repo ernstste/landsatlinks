@@ -3,6 +3,7 @@ name: trigger docker-publish in davidfrantz/base_image
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   dispatch:
