@@ -102,12 +102,18 @@ def main():
     # Login
     if args.secret:
         secret = utils.load_secret(os.path.realpath(args.secret))
+        if len(secret) == 3:
+            use_login_token = True
+            del secret[0]
+        else:
+            use_login_token = False
         user, passwd = secret
     else:
         print('\n')
         user = input('Enter your USGS EarthExplorer username: ')
         passwd = getpass('Enter your USGS EarthExplorer password: ')
-    api = eeapi(user, passwd)
+        use_login_token = False
+    api = eeapi(user, passwd, use_login_token)
 
     print(
         f'\nSensor(s): {args.sensor.replace(",", ", ")}\n'

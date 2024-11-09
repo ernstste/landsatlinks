@@ -101,8 +101,9 @@ def parse_cli_arguments():
     )
     parser_search.add_argument(
         '--secret',
-        help='Path to the file containing the username and password for M2MApi access (EarthExplorer login). '
-             'First line: username, second line: password.'
+        help='Path to the file containing the username and password/app-token for M2MApi access (EarthExplorer login).\n'
+            'a) 1st line: user, 2nd line: password - deprecated by the USGS API from February 2025\n'
+            'b) 1st line: "app-token", 2nd line: user, 3rd line: token'
     )
 
 

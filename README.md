@@ -7,6 +7,9 @@
 
 landsatlinks offers a simple command line interface to retrieve download links for Landsat Collection 2 Level 1 product bundles through the USGS/EROS machine-to-machine API.
 
+## Please note
+The USGS M2M login endpoint for username/password will be deprecated in February of 2025. Please make sure to create an application token and adapt your workflows by using a secrets file (see the `--secret` argument below).\
+More info on how to create an app token [here](https://www.usgs.gov/media/files/m2m-application-token-documentation)
 
 
 ### Requirements
@@ -88,7 +91,8 @@ _optional arguments:_
 - \--secret\
   Path to the file containing the username and password for M2MApi access (EarthExplorer login).\
   Avoids having to enter credentials every time the tool is run.\
-  First line: user, second line: password
+  a) 1st line: user, 2nd line: password - deprecated by the USGS API from February 2025\
+  b) 1st line: 'app-token', 2nd line: user, 3rd line: token
 
 Example:
 ```

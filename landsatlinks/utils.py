@@ -114,9 +114,16 @@ def load_secret(file_path: str) -> list:
     validate_file_paths(full_path, 'secrets', file=True, write=False)
     with open(file_path) as file:
         secret = [line.rstrip() for line in file]
-    if len(secret) != 2:
-        print("Invalid secrets file. Make sure the file only has two lines with the first line being the username "
-              "and the second line being the password. Exiting.")
+    if (
+            len(secret) not in [2, 3] or
+            len(secret) == 2 and secret[0] == 'app-token' or
+            len(secret) == 3 and secret[0] != 'app-token'
+    ):
+        print(
+            "Invalid secrets file. Expecting\n"
+            "a) 1st line: user, 2nd line: password - deprecated by the USGS M2M API from February 2025\n"
+            "b) 1st line: 'app-token', 2nd line: user, 3rd line: token"
+        )
         exit(1)
     return secret
 

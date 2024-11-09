@@ -8,13 +8,23 @@ import landsatlinks.utils as utils
 
 class eeapi(object):
 
-    def __init__(self, user: str, password: str):
+    def __init__(self, user: str, password: str, use_login_token: bool = True):
         self.endpoint = 'https://m2m.cr.usgs.gov/api/api/json/stable/'
-        self.key = self.login(user, password)
+        self.key = self.login(user, password, use_login_token)
 
-    def login(self, user: str, password: str) -> str:
-        loginData = json.dumps({'username': user, 'password': password, 'catalogID': 'EE'})
-        with requests.post(f'{self.endpoint}login?', data=loginData) as r:
+    def login(self, user: str, password: str, use_login_token: bool = True) -> str:
+        if use_login_token:
+            login_endpoint = 'login-token'
+            loginData = json.dumps({'username': user, 'token': password, 'catalogID': 'EE'})
+        else:
+            login_endpoint = 'login'
+            loginData = json.dumps({'username': user, 'password': password, 'catalogID': 'EE'})
+            print(
+                'Warning: the endpoint for user/password login will be deprecated by the USGS M2M API in February 2025.\n'
+                'Please create a login token, info here: https://www.usgs.gov/media/files/m2m-application-token-documentation'
+            )
+
+        with requests.post(f'{self.endpoint}{login_endpoint}?', data=loginData) as r:
             response = r.json()
             if response.get('errorCode', None):
                 print(f'Error: {response["errorCode"]}: {response["errorMessage"]}\n'
