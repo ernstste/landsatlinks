@@ -77,6 +77,7 @@ def check_date_validity(dates: list, name: str) -> None:
             print(f'Error: {name} dates not provided in format YYYYMMDD,YYYYMMDD or date is invalid.\ndate')
             exit(1)
 
+
 def check_tile_validity(tile_list: list) -> bool:
     regex_pattern = re.compile('^[0-2][0-9]{2}[0-2][0-9]{2}$')
     tiles_valid = True
@@ -113,7 +114,9 @@ def load_secret(file_path: str) -> list:
     full_path = os.path.realpath(file_path)
     validate_file_paths(full_path, 'secrets', file=True, write=False)
     with open(file_path) as file:
-        secret = [line.rstrip() for line in file]
+        secret = file.read().strip().split()
+        # remove whitespaces
+        secret = [s.strip() for s in secret]
     if (
             len(secret) not in [2, 3] or
             len(secret) == 2 and secret[0] == 'app-token' or

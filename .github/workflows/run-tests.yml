@@ -1,0 +1,46 @@
+name: 🧪 Python Tests
+
+on:
+  push:
+    branches:
+      - '**'
+
+  pull_request:
+    branches:
+      - '**'
+
+  release:
+    types: [ published ]
+
+jobs:
+  # Run python tests
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [ '3.9', '3.10', '3.12' ]
+      fail-fast: true
+
+    env:
+      PYTHON_VERSION: ${{ matrix.python_version}}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python_version}}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install pytest
+
+      - name: Run unittests
+        run: |
+          echo "$(pwd)"
+          export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+          pytest
